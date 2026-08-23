@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ختم صلوات | مشارکت در ثواب جمعی</title>
+
+    <!-- فونت وزیرمتن -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+
+    <!-- Supabase - نسخه پایدار -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
+
+    <style>
+        :root {
+            --green-900: #0b3d0b;
+            --green-800: #145214;
+            --green-700: #1b6b1b;
+            --green-600: #238523;
+            --green-500: #2e9e2e;
+            --green-100: #e6f5e6;
+            --gold-500: #d4af37;
+            --gold-400: #e2c45c;
+            --gold-300: #f0d978;
+            --gold-100: #fdf6d8;
+            --bg: #f8fbf8;
+            --surface: #ffffff;
+            --text: #1e2f1e;
+            --text-muted: #5a6e5a;
+            --shadow: 0 8px 25px rgba(0,0,0,0.06);
+            --shadow-lg: 0 15px 40px rgba(0,0,0,0.1);
+            --radius: 20px;
+            --radius-sm: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* اشکال هندسی پس‌زمینه */
+        .geo-shapes {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .geo-shape {
+            position: absolute;
+            opacity: 0.08;
+            animation: floatShape 18s infinite ease-in-out;
+        }
+        .geo-shape.circle {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: var(--green-500);
+            top: -80px;
+            left: -80px;
+        }
+        .geo-shape.square {
+            width: 220px;
+            height: 220px;
+            background: var(--gold-500);
+            transform: rotate(25deg);
+            bottom: -60px;
+            right: -60px;
+            animation-delay: 5s;
+        }
+        .geo-shape.triangle {
+            width: 0;
+            height: 0;
+            border-left: 130px solid transparent;
+            border-right: 130px solid transparent;
+            border-bottom: 220px solid var(--green-700);
+            top: 50%;
+            right: 15%;
+            animation-delay: 10s;
+            transform: rotate(-15deg);
+        }
+        .geo-shape.hexagon {
+            width: 200px;
+            height: 220px;
+            background: var(--gold-400);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            top: 20%;
+            left: 30%;
+            animation-delay: 3s;
+        }
+        @keyframes floatShape {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(8deg); }
+        }
+
+        /* هدر */
+        header {
+            background: linear-gradient(135deg, var(--green-900) 0%, var(--green-700) 100%);
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.25);
+        }
+        .logo {
+            color: var(--gold-400);
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+        .logo span { font-size: 34px; }
+        .nav-buttons { display: flex; gap: 10px; align-items: center; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        .btn-gold {
+            background: var(--gold-500);
+            color: #1a1a1a;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+        }
+        .btn-gold:hover {
+            background: var(--gold-400);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.5);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--gold-400);
+            border: 2px solid var(--gold-400);
+        }
+        .btn-outline:hover {
+            background: var(--gold-400);
+            color: var(--green-900);
+        }
+        .btn-danger {
+            background: #c0392b;
+            color: white;
+        }
+        .btn-danger:hover { background: #a93226; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 30px; }
+
+        /* محتوا */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 25px 20px 80px;
+        }
+
+        /* کارت‌ها */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 22px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--green-600), var(--gold-500));
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+
+        .page-title {
+            text-align: center;
+            margin: 25px 0 30px;
+        }
+        .page-title h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--green-800);
+            margin-bottom: 8px;
+        }
+        .page-title p {
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        /* شمارنده کل */
+        .counter-box {
+            background: linear-gradient(135deg, var(--gold-500) 0%, #c9a82c 100%);
+            border-radius: var(--radius);
+            padding: 28px;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1a1a1a;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        .counter-box::after {
+            content: '🕌';
+            position: absolute;
+            left: 20px;
+            bottom: -10px;
+            font-size: 80px;
+            opacity: 0.2;
+            transform: rotate(-15deg);
+        }
+        .counter-box .number {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+        .counter-box .label {
+            font-size: 16px;
+            opacity: 0.85;
+            margin-top: 5px;
+        }
+
+        /* تب‌ها */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            background: var(--surface);
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: var(--shadow);
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 8px;
+            border-radius: 45px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+        }
+        .tab.active {
+            background: var(--green-700);
+            color: white;
+            box-shadow: 0 4px 12px rgba(20, 80, 20, 0.3);
+        }
+
+        /* لیست ختم */
+        .khatm-card {
+            cursor: pointer;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            background: white;
+            box-shadow: var(--shadow);
+            border-right: 6px solid var(--gold-500);
+            transition: all 0.3s;
+            position: relative;
+        }
+        .khatm-card:hover {
+            transform: translateX(-6px);
+            box-shadow: var(--shadow-lg);
+            border-right-color: var(--green-500);
+        }
+        .khatm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .khatm-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--green-800);
+        }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .badge-active { background: var(--green-100); color: var(--green-700); }
+        .badge-done { background: var(--gold-100); color: #a3860d; }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #eef3ee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green-500), var(--gold-500));
+            border-radius: 10px;
+            transition: width 1s ease;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .khatm-info {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 13px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        /* دکمه شناور */
+        .fab {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background: var(--gold-500);
+            color: #1a1a1a;
+            font-size: 32px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .fab:hover {
+            transform: scale(1.08) rotate(90deg);
+            background: var(--gold-400);
+        }
+
+        /* مودال‌ها */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.55);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: var(--surface);
+            border-radius: 22px;
+            padding: 28px;
+            width: 100%;
+            max-width: 460px;
+            animation: modalUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes modalUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--green-800);
+            font-size: 22px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e8e0;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: #fafdfa;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--green-500);
+            box-shadow: 0 0 0 4px rgba(35, 130, 35, 0.12);
+        }
+        .btn-block {
+            width: 100%;
+            padding: 14px;
+            background: var(--green-700);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            margin-top: 5px;
+        }
+        .btn-block:hover { background: var(--green-600); transform: translateY(-1px); }
+
+        /* صفحات مخفی */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* داشبورد */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 18px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-bottom: 4px solid var(--gold-500);
+        }
+        .stat-card .stat-number {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--green-700);
+        }
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* جدول ادمین */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .admin-table th, .admin-table td {
+            padding: 10px 8px;
+            text-align: right;
+            border-bottom: 1px solid #eef3ee;
+        }
+        .admin-table th {
+            background: var(--green-100);
+            color: var(--green-800);
+            font-weight: 800;
+        }
+        .admin-table tr:hover td { background: #fcfefc; }
+
+        /* ریسپانسیو */
+        @media (max-width: 600px) {
+            header { padding: 14px 15px; }
+            .logo { font-size: 20px; }
+            .btn { padding: 8px 14px; font-size: 12px; }
+            .page-title h1 { font-size: 24px; }
+            .counter-box .number { font-size: 34px; }
+            .container { padding: 15px 10px 80px; }
+            .modal-content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- اشکال هندسی پس‌زمینه -->
+    <div class="geo-shapes">
+        <div class="geo-shape circle"></div>
+        <div class="geo-shape square"></div>
+        <div class="geo-shape triangle"></div>
+        <div class="geo-shape hexagon"></div>
+    </div>
+
+    <!-- هدر -->
+    <header>
+        <div class="logo">
+            <span>🕌</span> ختم صلوات
+        </div>
+        <div class="nav-buttons" id="navButtons">
+            <button class="btn btn-gold" onclick="openRegister()">ثبت‌نام</button>
+            <button class="btn btn-outline" onclick="openLogin()">ورود</button>
+        </div>
+    </header>
+
+    <!-- محتوای اصلی -->
+    <div class="container">
+
+        <!-- صفحه اصلی -->
+        <div class="page active" id="homePage">
+            <div class="page-title">
+                <h1>✨ ختم‌های صلوات جمعی ✨</h1>
+                <p>با مشارکت در ختم‌ها، ثواب جمعی ببرید</p>
+            </div>
+
+            <div class="counter-box">
+                <div class="number" id="totalSalavatCounter">۰</div>
+                <div class="label">صلوات فرستاده شده تا این لحظه</div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" id="tabActive" onclick="switchTab('active')">🟢 ختم‌های فعال</button>
+                <button class="tab" id="tabDone" onclick="switchTab('done')">✅ کامل شده</button>
+            </div>
+
+            <div id="khatmList"></div>
+        </div>
+
+        <!-- صفحه جزئیات ختم -->
+        <div class="page" id="khatmDetailPage">
+            <button class="btn btn-outline" style="margin-bottom: 15px;" onclick="backToHome()">→ بازگشت به لیست</button>
+            <div id="khatmDetailContent"></div>
+        </div>
+
+        <!-- صفحه داشبورد کاربر -->
+        <div class="page" id="dashboardPage">
+            <div class="page-title">
+                <h1>📊 داشبورد شما</h1>
+                <p>آمار فعالیت‌های شما</p>
+            </div>
+            <div class="dashboard-stats" id="dashboardStats"></div>
+            <div id="userParticipations"></div>
+        </div>
+
+        <!-- صفحه پنل ادمین -->
+        <div class="page" id="adminPage">
+            <div class="page-title">
+                <h1>👑 پنل مدیریت</h1>
+                <p>مدیریت کاربران و ختم‌ها</p>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:15px;">👥 کاربران</h3>
+                <div id="adminUsersList"></div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:15px;">🕌 ختم‌ها</h3>
+                <div id="adminKhatmsList"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- دکمه شناور ساخت ختم -->
+    <button class="fab" onclick="openCreateKhatm()">+</button>
+
+    <!-- مودال ثبت‌نام -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <h2>📝 ثبت‌نام در ختم صلوات</h2>
+            <div class="form-group">
+                <label>نام و نام خانوادگی</label>
+                <input type="text" id="regName" placeholder="مثلاً: فاطمه محمدی">
+            </div>
+            <div class="form-group">
+                <label>شماره موبایل</label>
+                <input type="tel" id="regPhone" placeholder="09xxxxxxxxx" maxlength="11">
+            </div>
+            <button class="btn-block" onclick="registerUser()">ثبت‌نام</button>
+        </div>
+    </div>
+
+    <!-- مودال ورود -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2>🔑 ورود</h2>
+            <div class="form-group">
+                <label>شماره موبایل</label>
+                <input type="tel" id="loginPhone" placeholder="09xxxxxxxxx" maxlength="11">
+            </div>
+            <div class="form-group">
+                <label>رمز عبور (فقط برای ادمین)</label>
+                <input type="password" id="loginPassword" placeholder="برای کاربران عادی خالی بماند">
+            </div>
+            <button class="btn-block" onclick="loginUser()">ورود</button>
+        </div>
+    </div>
+
+    <!-- مودال ساخت ختم -->
+    <div class="modal" id="createKhatmModal">
+        <div class="modal-content">
+            <h2>🌙 ساخت ختم جدید</h2>
+            <div class="form-group">
+                <label>عنوان ختم</label>
+                <input type="text" id="khatmTitle" placeholder="مثلاً: برای شفای بیماران">
+            </div>
+            <div class="form-group">
+                <label>نام نذرکننده (اختیاری)</label>
+                <input type="text" id="khatmNazer" placeholder="خالی بماند = ناشناس">
+            </div>
+            <div class="form-group">
+                <label>تعداد کل دورها (هر دور = ۱۰۰ صلوات)</label>
+                <input type="number" id="khatmTotal" value="150" min="1">
+            </div>
+            <div class="form-group">
+                <label>توضیحات (اختیاری)</label>
+                <textarea id="khatmDesc" rows="3" placeholder="هر توضیحی که می‌خواهید..."></textarea>
+            </div>
+            <button class="btn-block" onclick="createKhatm()">✨ شروع ختم</button>
+        </div>
+    </div>
+
+    <!-- مودال ثبت دور -->
+    <div class="modal" id="addDorModal">
+        <div class="modal-content">
+            <h2>📿 ثبت دور</h2>
+            <div class="form-group">
+                <label>چند دور فرستادید؟</label>
+                <input type="number" id="dorInput" min="1" value="1">
+            </div>
+            <button class="btn-block" onclick="submitDor()">ثبت</button>
+        </div>
+    </div>
+
+    <script>
+        // ================== تنظیمات Supabase ==================
+        const SUPABASE_URL = 'https://eudfhgvtbmbuosctlayw.supabase.co';
+        // از کلید Legacy Anon استفاده می‌کنیم
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1ZGZoZ3Z0Ym1idW9zY3RsYXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0OTQ2MzEsImV4cCI6MjEwMzA3MDYzMX0.3_fLCSfM6zxg55I1qeqFkdwOAgUoS9DbAVolGlviyIQ';
+
+        // ================== اتصال امن ==================
+        let supabase = null;
+        try {
+            if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                    auth: {
+                        persistSession: false,
+                        autoRefreshToken: false,
+                        detectSessionInUrl: false
+                    }
+                });
+                console.log('✅ Supabase connected');
+            } else {
+                console.error('❌ Supabase library not loaded or missing config');
+            }
+        } catch (e) {
+            console.error('❌ Supabase init error:', e);
+        }
+
+        // ================== متغیرهای سراسری ==================
+        let currentUser = JSON.parse(localStorage.getItem('khatm_user')) || null;
+        let currentKhatmId = null;
+        let currentTab = 'active';
+        const ADMIN_PHONE = '09000000000';
+        const ADMIN_PASSWORD = 'admin123';
+
+        // ================== توابع عمومی ==================
+        function openRegister() {
+            document.getElementById('registerModal').style.display = 'flex';
+        }
+        function openLogin() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+        function openCreateKhatm() {
+            if (!currentUser) {
+                alert('ابتدا وارد شوید یا ثبت‌نام کنید.');
+                openLogin();
+                return;
+            }
+            document.getElementById('createKhatmModal').style.display = 'flex';
+        }
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        }
+        document.querySelectorAll('.modal').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if (e.target === this) closeModals();
+            });
+        });
+
+        function updateNav() {
+            const nav = document.getElementById('navButtons');
+            if (currentUser) {
+                nav.innerHTML = `
+                    <button class="btn btn-outline" onclick="showDashboard()">📊 داشبورد</button>
+                    ${currentUser.role === 'admin1' || currentUser.role === 'admin2' ? 
+                        '<button class="btn btn-outline" onclick="showAdminPanel()">👑 مدیریت</button>' : ''}
+                    <button class="btn btn-gold" onclick="logout()">خروج (${currentUser.name.split(' ')[0]})</button>
+                `;
+            } else {
+                nav.innerHTML = `
+                    <button class="btn btn-gold" onclick="openRegister()">ثبت‌نام</button>
+                    <button class="btn btn-outline" onclick="openLogin()">ورود</button>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('khatm_user');
+            currentUser = null;
+            updateNav();
+            showPage('homePage');
+            loadHomeData();
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function backToHome() {
+            showPage('homePage');
+            loadHomeData();
+        }
+
+        // ================== ثبت‌نام ==================
+        async function registerUser() {
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نشد. لطفاً اینترنت را بررسی کنید.');
+                return;
+            }
+
+            const name = document.getElementById('regName').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+
+            if (!name || !phone) {
+                alert('لطفاً نام و شماره موبایل را وارد کنید.');
+                return;
+            }
+            if (!/^09\d{9}$/.test(phone)) {
+                alert('شماره موبایل معتبر نیست! (مثال: 09123456789)');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert([{ name, phone, role: 'user' }])
+                    .select()
+                    .single();
+
+                if (error) {
+                    if (error.code === '23505') {
+                        alert('این شماره قبلاً ثبت شده است. لطفاً وارد شوید.');
+                        closeModals();
+                        openLogin();
+                        return;
+                    }
+                    throw error;
+                }
+
+                currentUser = data;
+                localStorage.setItem('khatm_user', JSON.stringify(currentUser));
+                updateNav();
+                closeModals();
+                alert(`✅ ${name} عزیز، ثبت‌نام شما با موفقیت انجام شد!`);
+            } catch (err) {
+                alert('خطا در ثبت‌نام: ' + err.message);
+            }
+        }
+
+        // ================== ورود ==================
+        async function loginUser() {
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نشد. لطفاً اینترنت را بررسی کنید.');
+                return;
+            }
+
+            const phone = document.getElementById('loginPhone').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!phone) {
+                alert('شماره موبایل را وارد کنید.');
+                return;
+            }
+
+            // بررسی ادمین کل
+            if (phone === ADMIN_PHONE && password === ADMIN_PASSWORD) {
+                currentUser = {
+                    id: 'admin-special',
+                    name: 'مدیر کل',
+                    phone: ADMIN_PHONE,
+                    role: 'admin1'
+                };
+                localStorage.setItem('khatm_user', JSON.stringify(currentUser));
+                updateNav();
+                closeModals();
+                alert('👑 خوش آمدید مدیر کل!');
+                showPage('homePage');
+                loadHomeData();
+                return;
+            }
+
+            try {
+                const { data: user, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('phone', phone)
+                    .maybeSingle();
+
+                if (error) throw error;
+                if (!user) {
+                    alert('کاربری با این شماره یافت نشد. لطفاً ثبت‌نام کنید.');
+                    closeModals();
+                    openRegister();
+                    return;
+                }
+
+                currentUser = user;
+                localStorage.setItem('khatm_user', JSON.stringify(currentUser));
+                updateNav();
+                closeModals();
+                alert(`✅ خوش آمدید ${user.name}!`);
+                loadHomeData();
+            } catch (err) {
+                alert('خطا در ورود: ' + err.message);
+            }
+        }
+
+        // ================== ساخت ختم ==================
+        async function createKhatm() {
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نشد. لطفاً اینترنت را بررسی کنید.');
+                return;
+            }
+
+            const title = document.getElementById('khatmTitle').value.trim();
+            const nazer = document.getElementById('khatmNazer').value.trim() || null;
+            const totalDor = parseInt(document.getElementById('khatmTotal').value);
+            const description = document.getElementById('khatmDesc').value.trim() || null;
+
+            if (!title || !totalDor || totalDor < 1) {
+                alert('عنوان و تعداد دورهای معتبر وارد کنید.');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('khatms')
+                    .insert([{
+                        title,
+                        nazer,
+                        total_dor: totalDor,
+                        done_dor: 0,
+                        status: 'active',
+                        description,
+                        created_by: currentUser.id
+                    }])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                closeModals();
+                document.getElementById('khatmTitle').value = '';
+                document.getElementById('khatmNazer').value = '';
+                document.getElementById('khatmTotal').value = 150;
+                document.getElementById('khatmDesc').value = '';
+                alert('🎉 ختم با موفقیت ایجاد شد!');
+                loadHomeData();
+            } catch (err) {
+                alert('خطا در ایجاد ختم: ' + err.message);
+            }
+        }
+
+        // ================== بارگذاری داده‌ها ==================
+        async function loadHomeData() {
+            await loadCounter();
+            await loadKhatms(currentTab);
+        }
+
+        async function loadCounter() {
+            if (!supabase) return;
+            try {
+                const { data: khatms, error } = await supabase
+                    .from('khatms')
+                    .select('done_dor, total_dor');
+                if (error) throw error;
+                const totalDorDone = khatms.reduce((sum, k) => sum + (k.done_dor || 0), 0);
+                const totalSalavat = totalDorDone * 100;
+                document.getElementById('totalSalavatCounter').textContent = totalSalavat.toLocaleString('fa-IR');
+            } catch (err) {
+                console.error('Counter error:', err);
+            }
+        }
+
+        async function loadKhatms(type) {
+            if (!supabase) {
+                document.getElementById('khatmList').innerHTML = '<p style="text-align:center;color:red;">اتصال به سرور برقرار نیست.</p>';
+                return;
+            }
+            const listEl = document.getElementById('khatmList');
+            listEl.innerHTML = '<p style="text-align:center;color:#999;">در حال بارگذاری...</p>';
+            try {
+                let query = supabase
+                    .from('khatms')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (type === 'active') query = query.eq('status', 'active');
+                else query = query.eq('status', 'done');
+
+                const { data: khatms, error } = await query;
+                if (error) throw error;
+
+                if (khatms.length === 0) {
+                    listEl.innerHTML = '<p style="text-align:center;color:#777;">هیچ ختمی یافت نشد.</p>';
+                    return;
+                }
+
+                listEl.innerHTML = khatms.map(k => {
+                    const percent = k.total_dor > 0 ? Math.round((k.done_dor / k.total_dor) * 100) : 0;
+                    return `
+                        <div class="khatm-card" onclick="openKhatmDetail('${k.id}')">
+                            <div class="khatm-header">
+                                <div class="khatm-title">${k.title}</div>
+                                <span class="badge ${k.status === 'active' ? 'badge-active' : 'badge-done'}">${k.status === 'active' ? '🟢 در حال انجام' : '✅ کامل شده'}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:${percent}%"></div>
+                            </div>
+                            <div class="khatm-info">
+                                <span>نذر: ${k.nazer || 'ناشناس'}</span>
+                                <span>${k.done_dor} از ${k.total_dor} دور</span>
+                                <span>٪${percent}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                listEl.innerHTML = '<p style="text-align:center;color:red;">خطا در بارگذاری: ' + err.message + '</p>';
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tabActive').classList.toggle('active', tab === 'active');
+            document.getElementById('tabDone').classList.toggle('active', tab === 'done');
+            loadKhatms(tab);
+        }
+
+        // ================== جزئیات ختم ==================
+        async function openKhatmDetail(khatmId) {
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نیست.');
+                return;
+            }
+            currentKhatmId = khatmId;
+            showPage('khatmDetailPage');
+            const container = document.getElementById('khatmDetailContent');
+            container.innerHTML = '<p style="text-align:center;color:#999;">در حال بارگذاری...</p>';
+
+            try {
+                const { data: khatm, error: khatmError } = await supabase
+                    .from('khatms')
+                    .select('*')
+                    .eq('id', khatmId)
+                    .single();
+                if (khatmError) throw khatmError;
+
+                const { data: records, error: recordsError } = await supabase
+                    .from('dor_records')
+                    .select(`
+                        id,
+                        dor_count,
+                        created_at,
+                        user:users(name, phone)
+                    `)
+                    .eq('khatm_id', khatmId)
+                    .order('created_at', { ascending: false });
+                if (recordsError) throw recordsError;
+
+                const { data: comments, error: commentsError } = await supabase
+                    .from('comments')
+                    .select(`
+                        id,
+                        text,
+                        created_at,
+                        user:users(name)
+                    `)
+                    .eq('khatm_id', khatmId)
+                    .order('created_at', { ascending: false });
+                if (commentsError) throw commentsError;
+
+                const percent = khatm.total_dor > 0 ? Math.round((khatm.done_dor / khatm.total_dor) * 100) : 0;
+
+                let html = `
+                    <div class="card">
+                        <div class="khatm-header">
+                            <h2 style="color:var(--green-800);">${khatm.title}</h2>
+                            <span class="badge ${khatm.status === 'active' ? 'badge-active' : 'badge-done'}">${khatm.status === 'active' ? '🟢 فعال' : '✅ کامل'}</span>
+                        </div>
+                        <p style="color:var(--text-muted);margin-bottom:15px;">${khatm.description || ''}</p>
+                        <div class="khatm-info" style="margin-bottom:15px;">
+                            <span>نذرکننده: ${khatm.nazer || 'ناشناس'}</span>
+                            <span>تعداد کل دور: ${khatm.total_dor}</span>
+                            <span>انجام شده: ${khatm.done_dor}</span>
+                        </div>
+                        <div class="progress-bar" style="height:14px;">
+                            <div class="progress-fill" style="width:${percent}%"></div>
+                        </div>
+                        <p style="text-align:center;margin-top:8px;font-weight:700;color:var(--green-700);">${percent}% تکمیل شده</p>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">📿 ثبت دور شما</h3>
+                        ${currentUser ? `
+                            <button class="btn btn-gold" onclick="openAddDorModal()">ثبت دور</button>
+                        ` : '<p>برای ثبت دور ابتدا وارد شوید.</p>'}
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">👥 شرکت‌کنندگان (${records.length})</h3>
+                        ${records.length === 0 ? '<p style="color:#999;">هنوز کسی دور ثبت نکرده.</p>' : `
+                            <table class="admin-table">
+                                <thead><tr><th>نام</th><th>دورها</th><th>تاریخ</th></tr></thead>
+                                <tbody>
+                                    ${records.map(r => `
+                                        <tr>
+                                            <td>${r.user?.name || 'ناشناس'}</td>
+                                            <td>${r.dor_count}</td>
+                                            <td>${new Date(r.created_at).toLocaleDateString('fa-IR')}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `}
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom:15px;">💬 نظرات (${comments.length})</h3>
+                        ${currentUser ? `
+                            <div style="display:flex;gap:10px;margin-bottom:15px;">
+                                <input type="text" id="commentInput" placeholder="نظر خود را بنویسید..." style="flex:1;padding:10px;border:2px solid #e0e8e0;border-radius:12px;font-family:inherit;">
+                                <button class="btn btn-gold" onclick="submitComment()">ارسال</button>
+                            </div>
+                        ` : ''}
+                        <div id="commentsList">
+                            ${comments.length === 0 ? '<p style="color:#999;">هنوز نظری ثبت نشده.</p>' : 
+                                comments.map(c => `
+                                    <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+                                        <strong>${c.user?.name || 'ناشناس'}</strong>
+                                        <span style="color:#999;font-size:12px;margin-right:8px;">${new Date(c.created_at).toLocaleDateString('fa-IR')}</span>
+                                        <p style="margin-top:5px;">${c.text}</p>
+                                    </div>
+                                `).join('')
+                            }
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = '<p style="text-align:center;color:red;">خطا: ' + err.message + '</p>';
+            }
+        }
+
+        // ================== ثبت دور ==================
+        function openAddDorModal() {
+            document.getElementById('addDorModal').style.display = 'flex';
+        }
+
+        async function submitDor() {
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نیست.');
+                return;
+            }
+            const dorCount = parseInt(document.getElementById('dorInput').value);
+            if (!dorCount || dorCount < 1) {
+                alert('تعداد دور معتبر وارد کنید.');
+                return;
+            }
+            if (!currentUser || !currentKhatmId) {
+                alert('ابتدا وارد شوید.');
+                return;
+            }
+
+            try {
+                const { data: record, error: recordError } = await supabase
+                    .from('dor_records')
+                    .insert([{
+                        khatm_id: currentKhatmId,
+                        user_id: currentUser.id,
+                        dor_count: dorCount
+                    }])
+                    .select()
+                    .single();
+                if (recordError) throw recordError;
+
+                const { data: khatm, error: khatmFetchError } = await supabase
+                    .from('khatms')
+                    .select('done_dor, total_dor')
+                    .eq('id', currentKhatmId)
+                    .single();
+                if (khatmFetchError) throw khatmFetchError;
+
+                const newDone = (khatm.done_dor || 0) + dorCount;
+                const newStatus = newDone >= khatm.total_dor ? 'done' : 'active';
+
+                const { error: updateError } = await supabase
+                    .from('khatms')
+                    .update({ done_dor: newDone, status: newStatus })
+                    .eq('id', currentKhatmId);
+                if (updateError) throw updateError;
+
+                closeModals();
+                alert(`✅ ${dorCount} دور ثبت شد!`);
+                openKhatmDetail(currentKhatmId);
+                loadHomeData();
+                if (newStatus === 'done') {
+                    alert('🎉 این ختم کامل شد! تبریک!');
+                }
+            } catch (err) {
+                alert('خطا در ثبت دور: ' + err.message);
+            }
+        }
+
+        // ================== نظرات ==================
+        async function submitComment() {
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نیست.');
+                return;
+            }
+            const text = document.getElementById('commentInput').value.trim();
+            if (!text) return;
+            if (!currentUser || !currentKhatmId) {
+                alert('ابتدا وارد شوید.');
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('comments')
+                    .insert([{
+                        khatm_id: currentKhatmId,
+                        user_id: currentUser.id,
+                        text
+                    }]);
+                if (error) throw error;
+                document.getElementById('commentInput').value = '';
+                openKhatmDetail(currentKhatmId);
+            } catch (err) {
+                alert('خطا در ارسال نظر: ' + err.message);
+            }
+        }
+
+        // ================== داشبورد ==================
+        async function showDashboard() {
+            if (!currentUser) {
+                alert('ابتدا وارد شوید.');
+                return;
+            }
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نیست.');
+                return;
+            }
+            showPage('dashboardPage');
+
+            try {
+                const { data: records, error: recordsError } = await supabase
+                    .from('dor_records')
+                    .select('dor_count, khatm_id')
+                    .eq('user_id', currentUser.id);
+                if (recordsError) throw recordsError;
+
+                const totalDors = records.reduce((sum, r) => sum + r.dor_count, 0);
+                const totalSalavat = totalDors * 100;
+                const participatedKhatms = new Set(records.map(r => r.khatm_id)).size;
+
+                document.getElementById('dashboardStats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalDors.toLocaleString('fa-IR')}</div>
+                        <div class="stat-label">کل دورهای شما</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${totalSalavat.toLocaleString('fa-IR')}</div>
+                        <div class="stat-label">صلوات فرستاده شده</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${participatedKhatms.toLocaleString('fa-IR')}</div>
+                        <div class="stat-label">ختم‌های شرکت کرده</div>
+                    </div>
+                `;
+
+                const uniqueKhatmIds = [...new Set(records.map(r => r.khatm_id))];
+                let html = '<h3 style="margin-bottom:15px;">📋 ختم‌های شما</h3>';
+                if (uniqueKhatmIds.length === 0) {
+                    html += '<p>شما هنوز در ختمی شرکت نکرده‌اید.</p>';
+                } else {
+                    const { data: khatms, error: khatmsError } = await supabase
+                        .from('khatms')
+                        .select('*')
+                        .in('id', uniqueKhatmIds);
+                    if (khatmsError) throw khatmsError;
+
+                    html += khatms.map(k => {
+                        const userDors = records.filter(r => r.khatm_id === k.id).reduce((s, r) => s + r.dor_count, 0);
+                        return `
+                            <div class="khatm-card" onclick="openKhatmDetail('${k.id}')">
+                                <div class="khatm-header">
+                                    <span class="khatm-title">${k.title}</span>
+                                    <span class="badge ${k.status === 'active' ? 'badge-active' : 'badge-done'}">${k.status === 'active' ? 'فعال' : 'کامل'}</span>
+                                </div>
+                                <div class="khatm-info">
+                                    <span>تعداد دور شما: ${userDors}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                document.getElementById('userParticipations').innerHTML = html;
+            } catch (err) {
+                alert('خطا در بارگذاری داشبورد: ' + err.message);
+            }
+        }
+
+        // ================== پنل ادمین ==================
+        async function showAdminPanel() {
+            if (!currentUser || (currentUser.role !== 'admin1' && currentUser.role !== 'admin2')) {
+                alert('دسترسی غیرمجاز');
+                return;
+            }
+            if (!supabase) {
+                alert('اتصال به سرور برقرار نیست.');
+                return;
+            }
+            showPage('adminPage');
+            await loadAdminData();
+        }
+
+        async function loadAdminData() {
+            if (!supabase) return;
+            try {
+                const { data: users, error: usersError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (usersError) throw usersError;
+
+                let usersHtml = '<table class="admin-table"><thead><tr><th>نام</th><th>شماره</th><th>نقش</th><th>عملیات</th></tr></thead><tbody>';
+                users.forEach(u => {
+                    usersHtml += `
+                        <tr>
+                            <td>${u.name}</td>
+                            <td>${u.phone}</td>
+                            <td>${u.role}</td>
+                            <td>
+                                ${currentUser.role === 'admin1' && u.role !== 'admin1' ? `
+                                    <button class="btn btn-sm btn-gold" onclick="promoteToAdmin2('${u.id}')">ارتقا به ادمین دوم</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">حذف</button>
+                                ` : ''}
+                                ${currentUser.role === 'admin2' && u.role === 'user' ? `
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">حذف</button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+                usersHtml += '</tbody></table>';
+                document.getElementById('adminUsersList').innerHTML = usersHtml;
+            } catch (err) {
+                document.getElementById('adminUsersList').innerHTML = '<p style="color:red;">خطا: ' + err.message + '</p>';
+            }
+
+            try {
+                const { data: khatms, error: khatmsError } = await supabase
+                    .from('khatms')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (khatmsError) throw khatmsError;
+
+                let khatmsHtml = '<table class="admin-table"><thead><tr><th>عنوان</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>';
+                khatms.forEach(k => {
+                    khatmsHtml += `
+                        <tr>
+                            <td>${k.title}</td>
+                            <td>${k.status}</td>
+                            <td><button class="btn btn-sm btn-danger" onclick="deleteKhatm('${k.id}')">حذف</button></td>
+                        </tr>
+                    `;
+                });
+                khatmsHtml += '</tbody></table>';
+                document.getElementById('adminKhatmsList').innerHTML = khatmsHtml;
+            } catch (err) {
+                document.getElementById('adminKhatmsList').innerHTML = '<p style="color:red;">خطا: ' + err.message + '</p>';
+            }
+        }
+
+        async function promoteToAdmin2(userId) {
+            if (!supabase) return;
+            if (!confirm('این کاربر به ادمین دوم ارتقا یابد؟')) return;
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .update({ role: 'admin2' })
+                    .eq('id', userId);
+                if (error) throw error;
+                alert('✅ کاربر ارتقا یافت.');
+                loadAdminData();
+            } catch (err) {
+                alert('خطا: ' + err.message);
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!supabase) return;
+            if (!confirm('این کاربر حذف شود؟ تمام فعالیت‌های او از بین می‌رود.')) return;
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .delete()
+                    .eq('id', userId);
+                if (error) throw error;
+                alert('✅ کاربر حذف شد.');
+                loadAdminData();
+            } catch (err) {
+                alert('خطا: ' + err.message);
+            }
+        }
+
+        async function deleteKhatm(khatmId) {
+            if (!supabase) return;
+            if (!confirm('این ختم حذف شود؟ تمام دورها و نظرات آن پاک می‌شود.')) return;
+            try {
+                const { error } = await supabase
+                    .from('khatms')
+                    .delete()
+                    .eq('id', khatmId);
+                if (error) throw error;
+                alert('✅ ختم حذف شد.');
+                loadAdminData();
+                loadHomeData();
+            } catch (err) {
+                alert('خطا: ' + err.message);
+            }
+        }
+
+        // ================== شروع ==================
+        updateNav();
+        loadHomeData();
+    </script>
+</body>
+</html>
