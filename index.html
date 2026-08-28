@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎬 سینما</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+        }
+        .container { max-width:1200px; margin:0 auto; padding:20px; }
+        header {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .logo { font-size:28px; font-weight:900; background:linear-gradient(135deg,#f7971e,#ffd200); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .logo i { -webkit-text-fill-color:initial; color:#ffd200; }
+        .nav-links { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .nav-links a { color:rgba(255,255,255,0.7); text-decoration:none; padding:8px 16px; border-radius:30px; font-size:14px; cursor:pointer; transition:0.3s; }
+        .nav-links a:hover { color:#fff; background:rgba(255,255,255,0.15); }
+        .user-badge { background:rgba(255,255,255,0.1); padding:8px 18px; border-radius:30px; font-size:14px; border:1px solid rgba(255,255,255,0.1); }
+        .user-badge i { color:#ffd200; }
+        .btn {
+            padding:10px 24px;
+            border:none;
+            border-radius:50px;
+            font-size:14px;
+            font-weight:600;
+            cursor:pointer;
+            transition:0.4s;
+            font-family:'Vazirmatn',sans-serif;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+        }
+        .btn-primary { background:linear-gradient(135deg,#f7971e,#ffd200); color:#1a1a2e; }
+        .btn-primary:hover { transform:translateY(-3px); box-shadow:0 8px 35px rgba(247,151,30,0.5); }
+        .btn-success { background:linear-gradient(135deg,#00b09b,#96c93d); color:#fff; }
+        .btn-success:hover { transform:translateY(-3px); box-shadow:0 8px 35px rgba(0,176,155,0.5); }
+        .btn-danger { background:linear-gradient(135deg,#f093fb,#f5576c); color:#fff; }
+        .btn-danger:hover { transform:translateY(-3px); box-shadow:0 8px 35px rgba(245,87,108,0.5); }
+        .btn-sm { padding:6px 16px; font-size:12px; }
+        .glass {
+            background:rgba(255,255,255,0.07);
+            backdrop-filter:blur(20px);
+            border-radius:24px;
+            padding:30px;
+            border:1px solid rgba(255,255,255,0.1);
+            box-shadow:0 8px 32px rgba(0,0,0,0.2);
+            margin-bottom:25px;
+        }
+        .glass-title { font-size:22px; font-weight:700; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+        .glass-title i { color:#ffd200; }
+        .movie-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:25px; }
+        .movie-card {
+            background:rgba(255,255,255,0.06);
+            backdrop-filter:blur(15px);
+            border-radius:20px;
+            padding:25px 20px;
+            text-align:center;
+            border:1px solid rgba(255,255,255,0.08);
+            transition:0.4s;
+        }
+        .movie-card:hover { transform:translateY(-10px); border-color:rgba(255,215,0,0.3); box-shadow:0 20px 60px rgba(0,0,0,0.4); }
+        .movie-card .icon { font-size:48px; color:#ffd200; }
+        .movie-card h3 { font-size:18px; margin:10px 0; }
+        .movie-card .badge {
+            display:inline-block;
+            padding:4px 16px;
+            border-radius:30px;
+            font-size:12px;
+            font-weight:600;
+            background:linear-gradient(135deg,#f7971e,#ffd200);
+            color:#1a1a2e;
+        }
+        .movie-card .price { font-size:20px; font-weight:700; color:#ffd200; margin:10px 0; }
+        .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:20px; }
+        .stat-card {
+            background:rgba(255,255,255,0.05);
+            backdrop-filter:blur(10px);
+            border-radius:16px;
+            padding:25px;
+            text-align:center;
+            border:1px solid rgba(255,255,255,0.06);
+        }
+        .stat-card i { font-size:32px; color:#ffd200; }
+        .stat-card .number { font-size:28px; font-weight:900; }
+        .stat-card .label { font-size:14px; opacity:0.7; }
+        .form-group { margin-bottom:18px; }
+        .form-group label { display:block; font-weight:500; margin-bottom:6px; opacity:0.8; }
+        .form-group input {
+            width:100%;
+            padding:14px 18px;
+            background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:12px;
+            font-size:15px;
+            color:#fff;
+            transition:0.3s;
+            font-family:'Vazirmatn',sans-serif;
+        }
+        .form-group input:focus { border-color:#ffd200; outline:none; background:rgba(255,255,255,0.1); }
+        .form-group input::placeholder { color:rgba(255,255,255,0.3); }
+        .modal-overlay {
+            position:fixed;
+            top:0;left:0;
+            width:100%;height:100%;
+            background:rgba(0,0,0,0.7);
+            backdrop-filter:blur(10px);
+            z-index:9998;
+            display:none;
+            justify-content:center;
+            align-items:center;
+        }
+        .modal-overlay.active { display:flex; }
+        .modal {
+            background:rgba(255,255,255,0.1);
+            backdrop-filter:blur(30px);
+            border-radius:30px;
+            padding:40px;
+            max-width:450px;
+            width:90%;
+            border:1px solid rgba(255,255,255,0.15);
+            box-shadow:0 30px 80px rgba(0,0,0,0.5);
+            position:relative;
+        }
+        .modal h2 { text-align:center; margin-bottom:25px; color:#ffd200; }
+        .modal .btn { width:100%; justify-content:center; margin-top:10px; }
+        .modal .close-btn {
+            position:absolute;
+            top:15px;left:20px;
+            background:none;
+            border:none;
+            color:rgba(255,255,255,0.5);
+            font-size:24px;
+            cursor:pointer;
+        }
+        .modal p { text-align:center; margin-top:15px; opacity:0.5; font-size:13px; }
+        .modal p span { color:#ffd200; cursor:pointer; }
+        .toast-container {
+            position:fixed;
+            bottom:30px;
+            right:30px;
+            z-index:9999;
+        }
+        .toast {
+            padding:16px 28px;
+            border-radius:16px;
+            margin-top:10px;
+            background:rgba(255,255,255,0.1);
+            backdrop-filter:blur(20px);
+            border:1px solid rgba(255,255,255,0.1);
+            color:#fff;
+            font-weight:500;
+            animation:slideUp 0.4s ease;
+        }
+        .toast.success { border-color:#4ade80; }
+        .toast.error { border-color:#f87171; }
+        @keyframes slideUp {
+            from { opacity:0; transform:translateY(30px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+        .page { display:none; }
+        .page.active { display:block; }
+        .loading { text-align:center; padding:50px; }
+        .spinner {
+            width:50px;
+            height:50px;
+            border:3px solid rgba(255,255,255,0.05);
+            border-top:3px solid #ffd200;
+            border-radius:50%;
+            animation:spin 1s linear infinite;
+            margin:0 auto 15px;
+        }
+        @keyframes spin { 100% { transform:rotate(360deg); } }
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:14px; }
+        th, td { padding:14px 16px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.06); }
+        th { color:#ffd200; font-weight:600; }
+        footer {
+            background:rgba(255,255,255,0.03);
+            backdrop-filter:blur(10px);
+            padding:25px 0;
+            text-align:center;
+            border-top:1px solid rgba(255,255,255,0.05);
+            color:rgba(255,255,255,0.4);
+            margin-top:40px;
+        }
+        footer i { color:#ffd200; }
+        .theme-preset {
+            display:inline-block;
+            padding:8px 20px;
+            border-radius:30px;
+            background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1);
+            margin:4px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+        .theme-preset:hover { background:rgba(255,255,255,0.15); border-color:#ffd200; }
+        @media (max-width:768px) {
+            header .container { flex-direction:column; }
+            .nav-links { justify-content:center; }
+            .movie-grid { grid-template-columns:1fr 1fr; }
+        }
+        @media (max-width:480px) {
+            .movie-grid { grid-template-columns:1fr; }
+            .btn { padding:8px 16px; font-size:12px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="logo"><i class="fas fa-film"></i> سینما</div>
+        <div class="nav-links">
+            <a data-page="home">🏠 خانه</a>
+            <a data-page="movies">🎬 فیلم‌ها</a>
+            <a data-page="profile" id="profileLink" style="display:none;">👤 پروفایل</a>
+            <a data-page="admin" id="adminLink" style="display:none;">⚙️ مدیریت</a>
+            <a data-page="settings">🎨 تنظیمات</a>
+            <span class="user-badge" id="userBadge"><i class="fas fa-user-circle"></i> <span id="userName">میهمان</span></span>
+            <button class="btn btn-primary btn-sm" id="loginBtn">🔑 ورود</button>
+            <button class="btn btn-success btn-sm" id="registerBtn">➕ ثبت‌نام</button>
+        </div>
+    </div>
+</header>
+
+<!-- مودال ورود -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('loginModal')">✕</button>
+        <h2>🔑 ورود</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>📱 شماره تلفن</label>
+                <input type="tel" id="loginPhone" placeholder="09120000001" required>
+            </div>
+            <div class="form-group">
+                <label>🔑 کد تایید</label>
+                <input type="text" id="loginOTP" placeholder="123456" required>
+            </div>
+            <button type="submit" class="btn btn-primary">ورود</button>
+        </form>
+        <p>ثبت‌نام نکردید؟ <span onclick="closeModal('loginModal');openModal('registerModal')">ثبت‌نام کنید</span></p>
+    </div>
+</div>
+
+<!-- مودال ثبت‌نام -->
+<div class="modal-overlay" id="registerModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('registerModal')">✕</button>
+        <h2>➕ ثبت‌نام</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label>📱 شماره تلفن</label>
+                <input type="tel" id="regPhone" placeholder="09123456789" required>
+            </div>
+            <div class="form-group">
+                <label>👤 نام</label>
+                <input type="text" id="regFirstName" placeholder="نام" required>
+            </div>
+            <div class="form-group">
+                <label>👤 نام خانوادگی</label>
+                <input type="text" id="regLastName" placeholder="نام خانوادگی" required>
+            </div>
+            <div class="form-group">
+                <label>👨 نام پدر</label>
+                <input type="text" id="regFatherName" placeholder="نام پدر" required>
+            </div>
+            <button type="submit" class="btn btn-success">ثبت‌نام</button>
+        </form>
+        <p>حساب دارید؟ <span onclick="closeModal('registerModal');openModal('loginModal')">وارد شوید</span></p>
+    </div>
+</div>
+
+<main>
+    <div class="container">
+
+        <!-- خانه -->
+        <div class="page active" id="page-home">
+            <div class="glass">
+                <div class="glass-title"><i class="fas fa-ticket-alt"></i> به سینما خوش آمدید</div>
+                <p style="opacity:0.7;margin-bottom:20px;">رزرو بلیط، تجربه‌ای مدرن</p>
+                <div class="stats-row">
+                    <div class="stat-card"><i class="fas fa-users"></i><div class="number" id="statUsers">0</div><div class="label">کاربران</div></div>
+                    <div class="stat-card"><i class="fas fa-film"></i><div class="number" id="statMovies">0</div><div class="label">فیلم‌ها</div></div>
+                    <div class="stat-card"><i class="fas fa-check-circle"></i><div class="number" id="statBookings">0</div><div class="label">رزروها</div></div>
+                </div>
+            </div>
+            <div class="glass">
+                <div class="glass-title"><i class="fas fa-play-circle"></i> فیلم‌های در حال اکران</div>
+                <div id="homeMovies" class="movie-grid">...</div>
+            </div>
+        </div>
+
+        <!-- فیلم‌ها -->
+        <div class="page" id="page-movies">
+            <div class="glass">
+                <div class="glass-title"><i class="fas fa-list"></i> همه فیلم‌ها</div>
+                <div id="moviesList" class="movie-grid">...</div>
+            </div>
+        </div>
+
+        <!-- پروفایل -->
+        <div class="page" id="page-profile">
+            <div class="glass">
+                <div class="glass-title"><i class="fas fa-user-circle"></i> پروفایل</div>
+                <div id="profileInfo">لطفاً وارد شوید</div>
+                <hr style="margin:20px 0;border-color:rgba(255,255,255,0.05);">
+                <div class="glass-title" style="font-size:18px;"><i class="fas fa-ticket-alt"></i> رزروها</div>
+                <div id="myBookings">...</div>
+            </div>
+        </div>
+
+        <!-- مدیریت -->
+        <div class="page" id="page-admin">
+            <div class="glass">
+                <div class="glass-title"><i class="fas fa-users-cog"></i> مدیریت</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+                    <button class="btn btn-primary btn-sm" data-tab="users">👥 کاربران</button>
+                    <button class="btn btn-primary btn-sm" data-tab="movies">🎬 فیلم‌ها</button>
+                    <button class="btn btn-primary btn-sm" data-tab="bookings">🎟️ رزروها</button>
+                    <button class="btn btn-primary btn-sm" data-tab="addMovie">➕ افزودن فیلم</button>
+                    <button class="btn btn-primary btn-sm" data-tab="report">📊 گزارش</button>
+                </div>
+                <div id="adminContent">...</div>
+            </div>
+        </div>
+
+        <!-- تنظیمات -->
+        <div class="page" id="page-settings">
+            <div class="glass">
+                <div class="glass-title"><i class="fas fa-palette"></i> تغییر تم</div>
+                <div id="themePresets"></div>
+                <hr style="margin:20px 0;border-color:rgba(255,255,255,0.05);">
+                <div id="colorPickerContainer"></div>
+                <button class="btn btn-primary" id="saveThemeBtn" style="margin-top:15px;">💾 ذخیره تم</button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <div class="container">✨ ساخته شده با <i class="fas fa-heart"></i> برای عاشقان سینما</div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== تنظیمات Supabase (فقط یک بار) =====
+const SUPABASE_URL = 'https://ufwzjqnnfajgdaifqobz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmd3pqcW5uZmFqZ2RhaWZxb2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MzE3NzIsImV4cCI6MjEwMzUwNzc3Mn0.vlVNwSNcUNwM7D4BAPlkx8g1_iBVsmJgnjJWvF3FVnI';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let currentRole = 'user';
+
+function showToast(msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
+
+function formatDate(d) {
+    if (!d) return '-';
+    return new Date(d).toLocaleDateString('fa-IR');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ===== احراز هویت =====
+function initAuth() {
+    const saved = localStorage.getItem('cinema_user');
+    if (saved) {
+        try {
+            const user = JSON.parse(saved);
+            currentUser = user;
+            currentRole = user.role || 'user';
+            updateUI();
+            loadData();
+        } catch(e) {}
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', function() {
+        if (currentUser) {
+            logout();
+        } else {
+            openModal('loginModal');
+        }
+    });
+
+    document.getElementById('registerBtn').addEventListener('click', function() {
+        if (currentUser) {
+            showToast('شما وارد شده‌اید', 'info');
+        } else {
+            openModal('registerModal');
+        }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const phone = document.getElementById('loginPhone').value.trim();
+        const otp = document.getElementById('loginOTP').value.trim();
+
+        if (!phone || !otp) {
+            showToast('لطفاً همه فیلدها را پر کنید', 'error');
+            return;
+        }
+
+        if (otp === '123456') {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('phone', phone)
+                .maybeSingle();
+
+            if (error || !data) {
+                showToast('❌ کاربری یافت نشد', 'error');
+                return;
+            }
+
+            currentUser = data;
+            currentRole = data.role;
+            localStorage.setItem('cinema_user', JSON.stringify(data));
+            updateUI();
+            loadData();
+            closeModal('loginModal');
+            showToast(`✅ خوش آمدید ${currentUser.first_name}!`, 'success');
+        } else {
+            showToast('❌ کد اشتباه است', 'error');
+        }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const phone = document.getElementById('regPhone').value.trim();
+        const firstName = document.getElementById('regFirstName').value.trim();
+        const lastName = document.getElementById('regLastName').value.trim();
+        const fatherName = document.getElementById('regFatherName').value.trim();
+
+        if (!phone || !firstName || !lastName || !fatherName) {
+            showToast('❌ همه فیلدها را پر کنید', 'error');
+            return;
+        }
+
+        const { data: existing } = await supabase
+            .from('users')
+            .select('phone')
+            .eq('phone', phone)
+            .maybeSingle();
+
+        if (existing) {
+            showToast('❌ این شماره قبلاً ثبت شده', 'error');
+            return;
+        }
+
+        const { data, error } = await supabase
+            .from('users')
+            .insert({
+                phone: phone,
+                first_name: firstName,
+                last_name: lastName,
+                father_name: fatherName,
+                role: 'user'
+            })
+            .select()
+            .single();
+
+        if (error) {
+            showToast('❌ خطا: ' + error.message, 'error');
+            return;
+        }
+
+        if (data) {
+            const { data: newUser } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', data.id)
+                .single();
+
+            currentUser = newUser || data;
+            currentRole = 'user';
+            localStorage.setItem('cinema_user', JSON.stringify(currentUser));
+            updateUI();
+            loadData();
+            closeModal('registerModal');
+            showToast(`✅ ثبت‌نام موفق! کد: ${currentUser.code}`, 'success');
+        }
+    });
+}
+
+function updateUI() {
+    const userName = document.getElementById('userName');
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const profileLink = document.getElementById('profileLink');
+    const adminLink = document.getElementById('adminLink');
+
+    if (currentUser) {
+        userName.textContent = currentUser.first_name + ' ' + currentUser.last_name;
+        loginBtn.innerHTML = '🚪 خروج';
+        loginBtn.className = 'btn btn-danger btn-sm';
+        registerBtn.style.display = 'none';
+        profileLink.style.display = 'inline';
+        adminLink.style.display = (currentRole === 'admin1' || currentRole === 'admin2') ? 'inline' : 'none';
+        loadProfile();
+        if (currentRole === 'admin1' || currentRole === 'admin2') loadAdmin('users');
+    } else {
+        userName.textContent = 'میهمان';
+        loginBtn.innerHTML = '🔑 ورود';
+        loginBtn.className = 'btn btn-primary btn-sm';
+        registerBtn.style.display = 'inline-flex';
+        registerBtn.className = 'btn btn-success btn-sm';
+        profileLink.style.display = 'none';
+        adminLink.style.display = 'none';
+        document.getElementById('profileInfo').innerHTML = 'لطفاً وارد شوید';
+        document.getElementById('myBookings').innerHTML = '';
+    }
+}
+
+async function logout() {
+    currentUser = null;
+    currentRole = 'user';
+    localStorage.removeItem('cinema_user');
+    updateUI();
+    showToast('👋 خارج شدید', 'info');
+}
+
+// ===== پروفایل =====
+async function loadProfile() {
+    if (!currentUser) return;
+    document.getElementById('profileInfo').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;">
+            <div><span style="opacity:0.5;">نام</span><br><strong>${currentUser.first_name} ${currentUser.last_name}</strong></div>
+            <div><span style="opacity:0.5;">نام پدر</span><br><strong>${currentUser.father_name || '-'}</strong></div>
+            <div><span style="opacity:0.5;">تلفن</span><br><strong>${currentUser.phone}</strong></div>
+            <div><span style="opacity:0.5;">کد یکتا</span><br><span style="background:#ffd200;color:#1a1a2e;padding:4px 16px;border-radius:30px;font-weight:700;">${currentUser.code}</span></div>
+            <div><span style="opacity:0.5;">نقش</span><br><strong>${currentUser.role === 'admin1' ? '⭐ ادمین کل' : currentUser.role === 'admin2' ? 'ادمین دوم' : 'کاربر'}</strong></div>
+            <div><span style="opacity:0.5;">سطح دسترسی</span><br><strong>${currentUser.role === 'admin1' ? '🔓 کامل' : currentUser.role === 'admin2' ? '🔓 محدود' : '🔒 عادی'}</strong></div>
+        </div>
+    `;
+    loadBookings();
+}
+
+async function loadBookings() {
+    if (!currentUser) return;
+    const container = document.getElementById('myBookings');
+    const { data } = await supabase.from('bookings').select('*, movies(name)').eq('user_id', currentUser.id);
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p style="opacity:0.5;">🎫 هیچ رزروی ندارید</p>';
+        return;
+    }
+    let html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
+    data.forEach(b => {
+        html += `<tr><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status === 'active' ? '✅ فعال' : '❌ لغو شده'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// ===== فیلم‌ها =====
+async function loadMovies(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
+
+    const { data } = await supabase.from('movies').select('*').order('release_date');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p style="opacity:0.5;text-align:center;padding:30px;">🎬 هیچ فیلمی یافت نشد</p>';
+        return;
+    }
+
+    let html = '';
+    data.forEach(m => {
+        const statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
+        html += `
+            <div class="movie-card">
+                <div class="icon"><i class="fas fa-film"></i></div>
+                <h3>${m.name}</h3>
+                <div class="badge">${statusMap[m.status] || m.status}</div>
+                <p style="opacity:0.6;font-size:13px;">${formatDate(m.release_date)}</p>
+                <div class="price">${m.price.toLocaleString()} تومان</div>
+                ${m.status === 'now_showing' && currentUser ? `<button class="btn btn-primary btn-sm" onclick="bookMovie('${m.id}')">🎟️ رزرو</button>` : ''}
+                ${m.status === 'now_showing' && !currentUser ? `<button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;cursor:not-allowed;" onclick="showToast('لطفاً وارد شوید','error')">🎟️ رزرو</button>` : ''}
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+window.bookMovie = async function(movieId) {
+    if (!currentUser) {
+        showToast('⚠️ لطفاً وارد شوید', 'error');
+        return;
+    }
+    const count = prompt('🎫 تعداد بلیط (حداکثر ۴):', '1');
+    if (!count) return;
+    const num = parseInt(count);
+    if (num < 1 || num > 4) { showToast('❌ تعداد ۱ تا ۴', 'error'); return; }
+
+    const { error } = await supabase.from('bookings').insert({
+        user_id: currentUser.id,
+        movie_id: movieId,
+        ticket_count: num,
+        seat_numbers: [],
+        expiry_date: new Date(Date.now() + 86400000).toISOString(),
+        status: 'active'
+    });
+    if (error) {
+        showToast('❌ ' + error.message, 'error');
+    } else {
+        showToast('✅ رزرو موفق!', 'success');
+        loadBookings();
+        loadStats();
+    }
+};
+
+// ===== آمار =====
+async function loadStats() {
+    const [users, movies, bookings] = await Promise.all([
+        supabase.from('users').select('*', { count: 'exact', head: true }),
+        supabase.from('movies').select('*', { count: 'exact', head: true }),
+        supabase.from('bookings').select('*', { count: 'exact', head: true })
+    ]);
+    document.getElementById('statUsers').textContent = users.count || 0;
+    document.getElementById('statMovies').textContent = movies.count || 0;
+    document.getElementById('statBookings').textContent = bookings.count || 0;
+}
+
+// ===== مدیریت =====
+async function loadAdmin(tab) {
+    const container = document.getElementById('adminContent');
+    if (!currentUser || (currentRole !== 'admin1' && currentRole !== 'admin2')) {
+        container.innerHTML = '🔒 شما دسترسی مدیریت ندارید';
+        return;
+    }
+
+    container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
+
+    if (tab === 'users') {
+        const { data } = await supabase.from('users').select('*');
+        let html = '<div class="glass-title" style="font-size:18px;">👥 کاربران</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تلفن</th><th>کد</th><th>نقش</th><th>سطح</th></tr></thead><tbody>';
+        data.forEach(u => {
+            const role = u.role === 'admin1' ? '⭐ ادمین کل' : u.role === 'admin2' ? 'ادمین دوم' : 'کاربر';
+            const level = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
+            html += `<tr><td>${u.first_name} ${u.last_name}</td><td>${u.phone}</td><td style="color:#ffd200;">${u.code}</td><td>${role}</td><td>${level}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        html += `<button class="btn btn-primary" onclick="exportExcel()" style="margin-top:15px;">📊 خروجی اکسل</button>`;
+        container.innerHTML = html;
+    } else if (tab === 'movies') {
+        const { data } = await supabase.from('movies').select('*');
+        let html = '<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تاریخ</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th></tr></thead><tbody>';
+        data.forEach(m => {
+            html += `<tr><td>${m.name}</td><td>${formatDate(m.release_date)}</td><td>${m.capacity}</td><td>${m.price.toLocaleString()}</td><td>${m.status}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } else if (tab === 'bookings') {
+        const { data } = await supabase.from('bookings').select('*, users(first_name,last_name), movies(name)');
+        let html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
+        data.forEach(b => {
+            html += `<tr><td>${b.users?.first_name || ''} ${b.users?.last_name || ''}</td><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } else if (tab === 'addMovie') {
+        if (currentRole !== 'admin1') {
+            container.innerHTML = '🔒 فقط ادمین کل می‌تواند فیلم اضافه کند';
+            return;
+        }
+        container.innerHTML = `
+            <div class="glass-title" style="font-size:18px;">➕ افزودن فیلم</div>
+            <form id="addForm">
+                <div class="form-group"><label>نام فیلم</label><input type="text" id="mName" placeholder="تایتانیک" required></div>
+                <div class="form-group"><label>تاریخ اکران</label><input type="date" id="mDate" required></div>
+                <div class="form-group"><label>ظرفیت</label><input type="number" id="mCapacity" placeholder="100" required></div>
+                <div class="form-group"><label>قیمت</label><input type="number" id="mPrice" placeholder="150000" required></div>
+                <div class="form-group"><label>وضعیت</label>
+                    <select id="mStatus">
+                        <option value="coming_soon">به زودی</option>
+                        <option value="now_showing">در حال اکران</option>
+                        <option value="ended">پایان یافته</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">➕ افزودن</button>
+            </form>
+        `;
+        document.getElementById('addForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('mName').value.trim();
+            const release_date = document.getElementById('mDate').value;
+            const capacity = parseInt(document.getElementById('mCapacity').value);
+            const price = parseInt(document.getElementById('mPrice').value);
+            const status = document.getElementById('mStatus').value;
+            if (!name || !release_date || !capacity || !price) {
+                showToast('❌ همه فیلدها را پر کنید', 'error');
+                return;
+            }
+            const { error } = await supabase.from('movies').insert({ name, release_date, capacity, price, status });
+            if (error) {
+                showToast('❌ ' + error.message, 'error');
+            } else {
+                showToast('✅ فیلم اضافه شد!', 'success');
+                loadAdmin('movies');
+                loadMovies('homeMovies');
+                loadStats();
+            }
+        });
+    } else if (tab === 'report') {
+        container.innerHTML = `
+            <div class="glass-title" style="font-size:18px;">📊 گزارشات</div>
+            <button class="btn btn-primary" onclick="exportExcel()">📊 خروجی اکسل</button>
+        `;
+    }
+}
+
+// ===== خروجی اکسل =====
+window.exportExcel = async function() {
+    const { data } = await supabase.rpc('get_users_report');
+    if (!data) { showToast('❌ خطا', 'error'); return; }
+    let csv = 'نام کامل,تلفن,کد یکتا,نقش,سطح دسترسی\n';
+    data.forEach(row => {
+        const level = row.role === 'admin1' ? 'کامل' : row.role === 'admin2' ? 'محدود' : 'عادی';
+        csv += `"${row.full_name}","${row.phone}","${row.code}","${row.role}","${level}"\n`;
+    });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'گزارش_کاربران.csv';
+    link.click();
+    showToast('✅ خروجی دانلود شد', 'success');
+};
+
+// ===== ناوبری =====
+function initNav() {
+    document.querySelectorAll('[data-page]').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.dataset.page;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            if (page === 'home') { loadMovies('homeMovies'); loadStats(); }
+            else if (page === 'movies') loadMovies('moviesList');
+            else if (page === 'profile' && currentUser) loadProfile();
+            else if (page === 'admin') loadAdmin('users');
+        });
+    });
+    document.querySelectorAll('[data-tab]').forEach(el => {
+        el.addEventListener('click', function() { loadAdmin(this.dataset.tab); });
+    });
+}
+
+function loadData() {
+    loadMovies('homeMovies');
+    loadStats();
+    if (currentUser) loadProfile();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initAuth();
+    initNav();
+    document.body.style.background = 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)';
+    
+    document.getElementById('saveThemeBtn').addEventListener('click', () => {
+        if (currentUser) {
+            showToast('💾 تم ذخیره شد', 'success');
+        } else {
+            showToast('⚠️ ابتدا وارد شوید', 'error');
+        }
+    });
+});
+
+console.log('🎬 سینما آماده است!');
+console.log('📌 ورود: شماره 09120000001 - کد 123456');
+</script>
+
+</body>
+</html>
