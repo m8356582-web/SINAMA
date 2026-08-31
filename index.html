@@ -120,14 +120,8 @@
         <button class="close-btn" onclick="closeModal('loginModal')"><i class="fas fa-times"></i></button>
         <h2>🔑 ورود</h2>
         <form id="loginForm">
-            <div class="form-group">
-                <label>📱 شماره تلفن</label>
-                <input type="tel" id="loginPhone" placeholder="09120000001" required>
-            </div>
-            <div class="form-group">
-                <label>🔑 رمز عبور</label>
-                <input type="password" id="loginPassword" placeholder="********" required>
-            </div>
+            <div class="form-group"><label>📱 شماره تلفن</label><input type="tel" id="loginPhone" placeholder="09120000001" required></div>
+            <div class="form-group"><label>🔑 رمز عبور</label><input type="password" id="loginPassword" placeholder="********" required></div>
             <button type="submit" class="btn btn-primary">ورود</button>
         </form>
         <p>ثبت‌نام نکردید؟ <span onclick="closeModal('loginModal');openModal('registerModal')">ثبت‌نام کنید</span></p>
@@ -141,29 +135,14 @@
         <h2>➕ ثبت‌نام</h2>
         <form id="registerForm">
             <div class="form-row">
-                <div class="form-group">
-                    <label>📱 شماره تلفن</label>
-                    <input type="tel" id="regPhone" placeholder="09123456789" required>
-                </div>
-                <div class="form-group">
-                    <label>👤 نام</label>
-                    <input type="text" id="regFirstName" placeholder="نام" required>
-                </div>
+                <div class="form-group"><label>📱 شماره تلفن</label><input type="tel" id="regPhone" placeholder="09123456789" required></div>
+                <div class="form-group"><label>👤 نام</label><input type="text" id="regFirstName" placeholder="نام" required></div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>👤 نام خانوادگی</label>
-                    <input type="text" id="regLastName" placeholder="نام خانوادگی" required>
-                </div>
-                <div class="form-group">
-                    <label>👨 نام پدر</label>
-                    <input type="text" id="regFatherName" placeholder="نام پدر" required>
-                </div>
+                <div class="form-group"><label>👤 نام خانوادگی</label><input type="text" id="regLastName" placeholder="نام خانوادگی" required></div>
+                <div class="form-group"><label>👨 نام پدر</label><input type="text" id="regFatherName" placeholder="نام پدر" required></div>
             </div>
-            <div class="form-group">
-                <label>🔑 رمز عبور</label>
-                <input type="password" id="regPassword" placeholder="حداقل ۶ کاراکتر" required>
-            </div>
+            <div class="form-group"><label>🔑 رمز عبور</label><input type="password" id="regPassword" placeholder="حداقل ۶ کاراکتر" required></div>
             <button type="submit" class="btn btn-success">ثبت‌نام</button>
         </form>
         <p>حساب دارید؟ <span onclick="closeModal('registerModal');openModal('loginModal')">وارد شوید</span></p>
@@ -177,29 +156,14 @@
         <h2>✏️ ویرایش پروفایل</h2>
         <form id="editProfileForm">
             <div class="form-row">
-                <div class="form-group">
-                    <label>📱 شماره تلفن</label>
-                    <input type="tel" id="editPhone" required>
-                </div>
-                <div class="form-group">
-                    <label>👤 نام</label>
-                    <input type="text" id="editFirstName" required>
-                </div>
+                <div class="form-group"><label>📱 شماره تلفن</label><input type="tel" id="editPhone" required></div>
+                <div class="form-group"><label>👤 نام</label><input type="text" id="editFirstName" required></div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>👤 نام خانوادگی</label>
-                    <input type="text" id="editLastName" required>
-                </div>
-                <div class="form-group">
-                    <label>👨 نام پدر</label>
-                    <input type="text" id="editFatherName">
-                </div>
+                <div class="form-group"><label>👤 نام خانوادگی</label><input type="text" id="editLastName" required></div>
+                <div class="form-group"><label>👨 نام پدر</label><input type="text" id="editFatherName"></div>
             </div>
-            <div class="form-group">
-                <label>🔑 رمز عبور جدید (اختیاری)</label>
-                <input type="password" id="editPassword" placeholder="برای تغییر رمز وارد کنید">
-            </div>
+            <div class="form-group"><label>🔑 رمز عبور جدید (اختیاری)</label><input type="password" id="editPassword" placeholder="برای تغییر رمز وارد کنید"></div>
             <button type="submit" class="btn btn-warning">💾 ذخیره</button>
         </form>
     </div>
@@ -211,19 +175,10 @@
         <button class="close-btn" onclick="closeModal('bookingModal')"><i class="fas fa-times"></i></button>
         <h2>🎫 رزرو بلیط</h2>
         <form id="bookingForm">
-            <div class="form-group">
-                <label>🎬 فیلم</label>
-                <input type="text" id="bookingMovieName" disabled style="opacity:.7;">
-            </div>
+            <div class="form-group"><label>🎬 فیلم</label><input type="text" id="bookingMovieName" disabled style="opacity:.7;"></div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>🎫 تعداد بلیط</label>
-                    <input type="number" id="bookingTicketCount" min="1" value="1" required>
-                </div>
-                <div class="form-group">
-                    <label>💰 قیمت هر بلیط</label>
-                    <input type="text" id="bookingPrice" disabled style="opacity:.7;">
-                </div>
+                <div class="form-group"><label>🎫 تعداد بلیط</label><input type="number" id="bookingTicketCount" min="1" value="1" required></div>
+                <div class="form-group"><label>💰 قیمت هر بلیط</label><input type="text" id="bookingPrice" disabled style="opacity:.7;"></div>
             </div>
             <div id="passengersContainer"></div>
             <div class="passenger-actions">
@@ -247,27 +202,14 @@
         <form id="editUserForm">
             <input type="hidden" id="editUserId">
             <div class="form-row">
-                <div class="form-group">
-                    <label>📱 شماره تلفن</label>
-                    <input type="tel" id="editUserPhone" required>
-                </div>
-                <div class="form-group">
-                    <label>👤 نام</label>
-                    <input type="text" id="editUserFirstName" required>
-                </div>
+                <div class="form-group"><label>📱 شماره تلفن</label><input type="tel" id="editUserPhone" required></div>
+                <div class="form-group"><label>👤 نام</label><input type="text" id="editUserFirstName" required></div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>👤 نام خانوادگی</label>
-                    <input type="text" id="editUserLastName" required>
-                </div>
-                <div class="form-group">
-                    <label>👨 نام پدر</label>
-                    <input type="text" id="editUserFatherName">
-                </div>
+                <div class="form-group"><label>👤 نام خانوادگی</label><input type="text" id="editUserLastName" required></div>
+                <div class="form-group"><label>👨 نام پدر</label><input type="text" id="editUserFatherName"></div>
             </div>
-            <div class="form-group">
-                <label>🎭 نقش</label>
+            <div class="form-group"><label>🎭 نقش</label>
                 <select id="editUserRole">
                     <option value="user">کاربر عادی</option>
                     <option value="admin2">ادمین دوم</option>
@@ -477,9 +419,18 @@
                 mockUsers[idx] = { ...mockUsers[idx], ...data };
                 return mockUsers[idx];
             }
-            const { data: result, error } = await supabaseClient.from('users').update(data).eq('id', id).select().single();
-            if (error) throw error;
-            return result;
+            try {
+                const { data: result, error } = await supabaseClient
+                    .from('users')
+                    .update(data)
+                    .eq('id', id)
+                    .select();
+                if (error) throw error;
+                return result?.[0] || null;
+            } catch (e) {
+                console.error('خطا در updateUser:', e);
+                throw e;
+            }
         }
 
         async function deleteUser(id) {
@@ -1156,19 +1107,23 @@
         }
 
         window.editUser = async function(userId) {
-            const users = await getUsers();
-            const user = users.find(u => u.id === userId);
-            if (!user) {
-                showToast('❌ کاربر یافت نشد', 'error');
-                return;
+            try {
+                const users = await getUsers();
+                const user = users.find(u => String(u.id) === String(userId));
+                if (!user) {
+                    showToast('❌ کاربر یافت نشد', 'error');
+                    return;
+                }
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUserPhone').value = user.phone || '';
+                document.getElementById('editUserFirstName').value = user.first_name || '';
+                document.getElementById('editUserLastName').value = user.last_name || '';
+                document.getElementById('editUserFatherName').value = user.father_name || '';
+                document.getElementById('editUserRole').value = user.role || 'user';
+                openModal('editUserModal');
+            } catch (e) {
+                showToast('❌ خطا: ' + e.message, 'error');
             }
-            document.getElementById('editUserId').value = userId;
-            document.getElementById('editUserPhone').value = user.phone || '';
-            document.getElementById('editUserFirstName').value = user.first_name || '';
-            document.getElementById('editUserLastName').value = user.last_name || '';
-            document.getElementById('editUserFatherName').value = user.father_name || '';
-            document.getElementById('editUserRole').value = user.role || 'user';
-            openModal('editUserModal');
         };
 
         document.getElementById('editUserForm').addEventListener('submit', async function(e) {
@@ -1203,7 +1158,7 @@
 
         window.promoteUser = async function(userId) {
             const users = await getUsers();
-            const user = users.find(u => u.id === userId);
+            const user = users.find(u => String(u.id) === String(userId));
             if (!user) { showToast('❌ کاربر یافت نشد', 'error'); return; }
 
             let newRole = 'admin2';
@@ -1224,13 +1179,13 @@
 
         window.demoteUser = async function(userId) {
             const users = await getUsers();
-            const user = users.find(u => u.id === userId);
+            const user = users.find(u => String(u.id) === String(userId));
             if (!user) { showToast('❌ کاربر یافت نشد', 'error'); return; }
             if (user.role === 'user') {
                 showToast('⚠️ این کاربر قبلاً عادی است', 'info');
                 return;
             }
-            if (user.id === currentUser.id) {
+            if (String(user.id) === String(currentUser.id)) {
                 showToast('❌ نمی‌توانید خودتان را عزل کنید', 'error');
                 return;
             }
@@ -1246,9 +1201,9 @@
 
         window.deleteUserAccount = async function(userId) {
             const users = await getUsers();
-            const user = users.find(u => u.id === userId);
+            const user = users.find(u => String(u.id) === String(userId));
             if (!user) { showToast('❌ کاربر یافت نشد', 'error'); return; }
-            if (user.id === currentUser.id) {
+            if (String(user.id) === String(currentUser.id)) {
                 showToast('❌ نمی‌توانید خودتان را حذف کنید', 'error');
                 return;
             }
