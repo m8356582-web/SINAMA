@@ -6,10 +6,9 @@
     <title>🎬 سینما</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
-    <!-- بارگذاری Supabase با نسخهٔ مشخص و مطمئن -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
     <style>
-        /* تمام استایل‌ها بدون تغییر (کوتاه شده) */
+        /* همان استایل‌های قبلی (کوتاه شده) */
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Vazirmatn',sans-serif; min-height:100vh; background:linear-gradient(135deg,#0f0c29,#302b63,#24243e); color:#fff; }
         .container { max-width:1200px; margin:0 auto; padding:20px; }
@@ -96,7 +95,6 @@
     </div>
 </header>
 
-<!-- مودال ورود -->
 <div class="modal-overlay" id="loginModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('loginModal')">✕</button>
@@ -116,7 +114,6 @@
     </div>
 </div>
 
-<!-- مودال ثبت‌نام -->
 <div class="modal-overlay" id="registerModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('registerModal')">✕</button>
@@ -146,7 +143,6 @@
 
 <main>
     <div class="container">
-        <!-- خانه -->
         <div class="page active" id="page-home">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-ticket-alt"></i> به سینما خوش آمدید</div>
@@ -163,7 +159,6 @@
             </div>
         </div>
 
-        <!-- فیلم‌ها -->
         <div class="page" id="page-movies">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-list"></i> همه فیلم‌ها</div>
@@ -171,7 +166,6 @@
             </div>
         </div>
 
-        <!-- پروفایل -->
         <div class="page" id="page-profile">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-user-circle"></i> پروفایل</div>
@@ -182,7 +176,6 @@
             </div>
         </div>
 
-        <!-- مدیریت -->
         <div class="page" id="page-admin">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-users-cog"></i> مدیریت</div>
@@ -197,7 +190,6 @@
             </div>
         </div>
 
-        <!-- تنظیمات -->
         <div class="page" id="page-settings">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-palette"></i> تغییر تم</div>
@@ -217,27 +209,52 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-// =============================================
-// برای جلوگیری از هرگونه تداخل، از IIFE و نام متغیر یکتا استفاده می‌کنیم
-// =============================================
 (function() {
-    // ===== تنظیمات Supabase =====
+    // تنظیمات Supabase
     const SUPABASE_URL = 'https://ufwzjqnnfajgdaifqobz.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmd3pqcW5uZmFqZ2RhaWZxb2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MzE3NzIsImV4cCI6MjEwMzUwNzc3Mn0.vlVNwSNcUNwM7D4BAPlkx8g1_iBVsmJgnjJWvF3FVnI';
 
-    // بررسی بارگذاری کتابخانه
-    if (typeof window.supabase === 'undefined') {
-        console.error('کتابخانه Supabase بارگذاری نشده است');
-        document.body.innerHTML = '<div style="text-align:center;padding:50px;color:#fff;font-family:Vazirmatn;">❌ خطا در بارگذاری کتابخانه Supabase. اتصال اینترنت را بررسی کنید.</div>';
-        return;
-    }
-
-    // استفاده از نام متغیر یکتا برای جلوگیری از تداخل
-    const cinemaDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // متغیرهای سراسری (در محدوده IIFE)
+    // متغیرهای وضعیت
     let currentUser = null;
     let currentRole = 'user';
+    let useMockData = false; // اگر Supabase در دسترس نباشد true می‌شود
+
+    // داده‌های نمونه برای حالت Mock
+    const mockUsers = [
+        { id: '1', phone: '09120000001', first_name: 'علی', last_name: 'رضایی', father_name: 'محمد', role: 'admin1', code: '1001' },
+        { id: '2', phone: '09123456789', first_name: 'مریم', last_name: 'احمدی', father_name: 'حسین', role: 'user', code: '1002' }
+    ];
+    const mockMovies = [
+        { id: 'm1', name: 'تایتانیک', release_date: '2023-01-15', capacity: 100, price: 150000, status: 'now_showing' },
+        { id: 'm2', name: 'اینception', release_date: '2023-02-20', capacity: 80, price: 200000, status: 'now_showing' },
+        { id: 'm3', name: 'جنگ ستارگان', release_date: '2023-03-10', capacity: 120, price: 180000, status: 'coming_soon' }
+    ];
+    const mockBookings = [
+        { id: 'b1', user_id: '2', movie_id: 'm1', ticket_count: 2, booking_code: 'BK-001', status: 'active' },
+        { id: 'b2', user_id: '2', movie_id: 'm2', ticket_count: 1, booking_code: 'BK-002', status: 'active' }
+    ];
+
+    let supabaseClient = null;
+
+    // تلاش برای اتصال به Supabase
+    async function initSupabase() {
+        if (typeof window.supabase === 'undefined') {
+            console.warn('کتابخانه Supabase بارگذاری نشد. استفاده از حالت Mock.');
+            useMockData = true;
+            return;
+        }
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // تست اتصال ساده
+        try {
+            const { error } = await supabaseClient.from('movies').select('id').limit(1);
+            if (error) throw error;
+            useMockData = false;
+            console.log('اتصال به Supabase برقرار شد.');
+        } catch (e) {
+            console.warn('خطا در اتصال به Supabase، استفاده از حالت Mock.', e);
+            useMockData = true;
+        }
+    }
 
     // توابع کمکی
     function showToast(msg, type = 'info') {
@@ -255,12 +272,297 @@
         return new Date(d).toLocaleDateString('fa-IR');
     }
 
-    // توابع سراسری برای onclick
     window.openModal = function(id) { document.getElementById(id).classList.add('active'); };
     window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); };
 
-    // ===== احراز هویت =====
-    function initAuth() {
+    // ===== عملیات داده‌ها =====
+    async function getUsers() {
+        if (useMockData) return mockUsers;
+        const { data } = await supabaseClient.from('users').select('*');
+        return data || [];
+    }
+
+    async function getMovies() {
+        if (useMockData) return mockMovies;
+        const { data } = await supabaseClient.from('movies').select('*').order('release_date');
+        return data || [];
+    }
+
+    async function getBookings() {
+        if (useMockData) return mockBookings;
+        const { data } = await supabaseClient.from('bookings').select('*, users(first_name,last_name), movies(name)');
+        return data || [];
+    }
+
+    async function getUserByPhone(phone) {
+        if (useMockData) return mockUsers.find(u => u.phone === phone) || null;
+        const { data } = await supabaseClient.from('users').select('*').eq('phone', phone).maybeSingle();
+        return data;
+    }
+
+    async function insertUser(user) {
+        if (useMockData) {
+            const newUser = { ...user, id: String(mockUsers.length + 1), code: String(1000 + mockUsers.length + 1) };
+            mockUsers.push(newUser);
+            return newUser;
+        }
+        const { data, error } = await supabaseClient.from('users').insert(user).select().single();
+        if (error) throw error;
+        return data;
+    }
+
+    async function insertBooking(booking) {
+        if (useMockData) {
+            const newBooking = { ...booking, id: 'b' + (mockBookings.length + 1), booking_code: 'BK-00' + (mockBookings.length + 1) };
+            mockBookings.push(newBooking);
+            return newBooking;
+        }
+        const { data, error } = await supabaseClient.from('bookings').insert(booking).select().single();
+        if (error) throw error;
+        return data;
+    }
+
+    async function addMovie(movie) {
+        if (useMockData) {
+            const newMovie = { ...movie, id: 'm' + (mockMovies.length + 1) };
+            mockMovies.push(newMovie);
+            return newMovie;
+        }
+        const { error } = await supabaseClient.from('movies').insert(movie);
+        if (error) throw error;
+    }
+
+    // ===== UI Functions =====
+    function updateUI() {
+        const userName = document.getElementById('userName');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const profileLink = document.getElementById('profileLink');
+        const adminLink = document.getElementById('adminLink');
+
+        if (currentUser) {
+            userName.textContent = currentUser.first_name + ' ' + currentUser.last_name;
+            loginBtn.innerHTML = '🚪 خروج';
+            loginBtn.className = 'btn btn-danger btn-sm';
+            registerBtn.style.display = 'none';
+            profileLink.style.display = 'inline';
+            adminLink.style.display = (currentRole === 'admin1' || currentRole === 'admin2') ? 'inline' : 'none';
+            loadProfile();
+            if (currentRole === 'admin1' || currentRole === 'admin2') loadAdmin('users');
+        } else {
+            userName.textContent = 'میهمان';
+            loginBtn.innerHTML = '🔑 ورود';
+            loginBtn.className = 'btn btn-primary btn-sm';
+            registerBtn.style.display = 'inline-flex';
+            registerBtn.className = 'btn btn-success btn-sm';
+            profileLink.style.display = 'none';
+            adminLink.style.display = 'none';
+            document.getElementById('profileInfo').innerHTML = 'لطفاً وارد شوید';
+            document.getElementById('myBookings').innerHTML = '';
+        }
+    }
+
+    async function loadProfile() {
+        if (!currentUser) return;
+        document.getElementById('profileInfo').innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;">
+                <div><span style="opacity:0.5;">نام</span><br><strong>${currentUser.first_name} ${currentUser.last_name}</strong></div>
+                <div><span style="opacity:0.5;">نام پدر</span><br><strong>${currentUser.father_name || '-'}</strong></div>
+                <div><span style="opacity:0.5;">تلفن</span><br><strong>${currentUser.phone}</strong></div>
+                <div><span style="opacity:0.5;">کد یکتا</span><br><span style="background:#ffd200;color:#1a1a2e;padding:4px 16px;border-radius:30px;font-weight:700;">${currentUser.code}</span></div>
+                <div><span style="opacity:0.5;">نقش</span><br><strong>${currentUser.role === 'admin1' ? '⭐ ادمین کل' : currentUser.role === 'admin2' ? 'ادمین دوم' : 'کاربر'}</strong></div>
+                <div><span style="opacity:0.5;">سطح دسترسی</span><br><strong>${currentUser.role === 'admin1' ? '🔓 کامل' : currentUser.role === 'admin2' ? '🔓 محدود' : '🔒 عادی'}</strong></div>
+            </div>
+        `;
+        loadBookings();
+    }
+
+    async function loadBookings() {
+        if (!currentUser) return;
+        const container = document.getElementById('myBookings');
+        if (!container) return;
+        const bookings = await getBookings();
+        const myBookings = bookings.filter(b => b.user_id === currentUser.id);
+        if (myBookings.length === 0) {
+            container.innerHTML = '<p style="opacity:0.5;">🎫 هیچ رزروی ندارید</p>';
+            return;
+        }
+        let html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
+        for (const b of myBookings) {
+            const movie = useMockData ? mockMovies.find(m => m.id === b.movie_id) : (b.movies?.name ? { name: b.movies.name } : null);
+            html += `<tr><td>${movie ? movie.name : '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status === 'active' ? '✅ فعال' : '❌ لغو شده'}</td></tr>`;
+        }
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    async function loadMovies(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
+        const movies = await getMovies();
+        if (movies.length === 0) {
+            container.innerHTML = '<p style="opacity:0.5;text-align:center;padding:30px;">🎬 هیچ فیلمی یافت نشد</p>';
+            return;
+        }
+        let html = '';
+        for (const m of movies) {
+            const statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
+            html += `
+                <div class="movie-card">
+                    <div class="icon"><i class="fas fa-film"></i></div>
+                    <h3>${m.name}</h3>
+                    <div class="badge">${statusMap[m.status] || m.status}</div>
+                    <p style="opacity:0.6;font-size:13px;">${formatDate(m.release_date)}</p>
+                    <div class="price">${m.price.toLocaleString()} تومان</div>
+                    ${m.status === 'now_showing' && currentUser ? `<button class="btn btn-primary btn-sm" onclick="window.bookMovie('${m.id}')">🎟️ رزرو</button>` : ''}
+                    ${m.status === 'now_showing' && !currentUser ? `<button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;cursor:not-allowed;" onclick="showToast('لطفاً وارد شوید','error')">🎟️ رزرو</button>` : ''}
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    window.bookMovie = async function(movieId) {
+        if (!currentUser) {
+            showToast('⚠️ لطفاً وارد شوید', 'error');
+            return;
+        }
+        const count = prompt('🎫 تعداد بلیط (حداکثر ۴):', '1');
+        if (!count) return;
+        const num = parseInt(count);
+        if (num < 1 || num > 4) { showToast('❌ تعداد ۱ تا ۴', 'error'); return; }
+        try {
+            await insertBooking({
+                user_id: currentUser.id,
+                movie_id: movieId,
+                ticket_count: num,
+                seat_numbers: [],
+                expiry_date: new Date(Date.now() + 86400000).toISOString(),
+                status: 'active'
+            });
+            showToast('✅ رزرو موفق!', 'success');
+            loadBookings();
+            loadStats();
+        } catch (e) {
+            showToast('❌ خطا در رزرو', 'error');
+        }
+    };
+
+    async function loadStats() {
+        const users = await getUsers();
+        const movies = await getMovies();
+        const bookings = await getBookings();
+        document.getElementById('statUsers').textContent = users.length;
+        document.getElementById('statMovies').textContent = movies.length;
+        document.getElementById('statBookings').textContent = bookings.length;
+    }
+
+    async function loadAdmin(tab) {
+        const container = document.getElementById('adminContent');
+        if (!currentUser || (currentRole !== 'admin1' && currentRole !== 'admin2')) {
+            container.innerHTML = '🔒 شما دسترسی مدیریت ندارید';
+            return;
+        }
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
+
+        if (tab === 'users') {
+            const users = await getUsers();
+            let html = '<div class="glass-title" style="font-size:18px;">👥 کاربران</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تلفن</th><th>کد</th><th>نقش</th><th>سطح</th></tr></thead><tbody>';
+            users.forEach(u => {
+                const role = u.role === 'admin1' ? '⭐ ادمین کل' : u.role === 'admin2' ? 'ادمین دوم' : 'کاربر';
+                const level = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
+                html += `<tr><td>${u.first_name} ${u.last_name}</td><td>${u.phone}</td><td style="color:#ffd200;">${u.code}</td><td>${role}</td><td>${level}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            html += `<button class="btn btn-primary" onclick="window.exportExcel()" style="margin-top:15px;">📊 خروجی اکسل</button>`;
+            container.innerHTML = html;
+        } else if (tab === 'movies') {
+            const movies = await getMovies();
+            let html = '<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تاریخ</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th></tr></thead><tbody>';
+            movies.forEach(m => {
+                html += `<tr><td>${m.name}</td><td>${formatDate(m.release_date)}</td><td>${m.capacity}</td><td>${m.price.toLocaleString()}</td><td>${m.status}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        } else if (tab === 'bookings') {
+            const bookings = await getBookings();
+            let html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
+            for (const b of bookings) {
+                const user = useMockData ? mockUsers.find(u => u.id === b.user_id) : (b.users ? { first_name: b.users.first_name, last_name: b.users.last_name } : {});
+                const movie = useMockData ? mockMovies.find(m => m.id === b.movie_id) : (b.movies ? { name: b.movies.name } : {});
+                html += `<tr><td>${user.first_name || ''} ${user.last_name || ''}</td><td>${movie.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status}</td></tr>`;
+            }
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        } else if (tab === 'addMovie') {
+            if (currentRole !== 'admin1') {
+                container.innerHTML = '🔒 فقط ادمین کل می‌تواند فیلم اضافه کند';
+                return;
+            }
+            container.innerHTML = `
+                <div class="glass-title" style="font-size:18px;">➕ افزودن فیلم</div>
+                <form id="addForm">
+                    <div class="form-group"><label>نام فیلم</label><input type="text" id="mName" placeholder="تایتانیک" required></div>
+                    <div class="form-group"><label>تاریخ اکران</label><input type="date" id="mDate" required></div>
+                    <div class="form-group"><label>ظرفیت</label><input type="number" id="mCapacity" placeholder="100" required></div>
+                    <div class="form-group"><label>قیمت</label><input type="number" id="mPrice" placeholder="150000" required></div>
+                    <div class="form-group"><label>وضعیت</label>
+                        <select id="mStatus">
+                            <option value="coming_soon">به زودی</option>
+                            <option value="now_showing">در حال اکران</option>
+                            <option value="ended">پایان یافته</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">➕ افزودن</button>
+                </form>
+            `;
+            document.getElementById('addForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('mName').value.trim();
+                const release_date = document.getElementById('mDate').value;
+                const capacity = parseInt(document.getElementById('mCapacity').value);
+                const price = parseInt(document.getElementById('mPrice').value);
+                const status = document.getElementById('mStatus').value;
+                if (!name || !release_date || !capacity || !price) {
+                    showToast('❌ همه فیلدها را پر کنید', 'error');
+                    return;
+                }
+                try {
+                    await addMovie({ name, release_date, capacity, price, status });
+                    showToast('✅ فیلم اضافه شد!', 'success');
+                    loadAdmin('movies');
+                    loadMovies('homeMovies');
+                    loadStats();
+                } catch (e) {
+                    showToast('❌ خطا', 'error');
+                }
+            });
+        } else if (tab === 'report') {
+            container.innerHTML = `
+                <div class="glass-title" style="font-size:18px;">📊 گزارشات</div>
+                <button class="btn btn-primary" onclick="window.exportExcel()">📊 خروجی اکسل</button>
+            `;
+        }
+    }
+
+    window.exportExcel = async function() {
+        const users = await getUsers();
+        let csv = 'نام کامل,تلفن,کد یکتا,نقش,سطح دسترسی\n';
+        users.forEach(u => {
+            const level = u.role === 'admin1' ? 'کامل' : u.role === 'admin2' ? 'محدود' : 'عادی';
+            csv += `"${u.first_name} ${u.last_name}","${u.phone}","${u.code}","${u.role}","${level}"\n`;
+        });
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'گزارش_کاربران.csv';
+        link.click();
+        showToast('✅ خروجی دانلود شد', 'success');
+    };
+
+    // ===== Auth =====
+    async function initAuth() {
         const saved = localStorage.getItem('cinema_user');
         if (saved) {
             try {
@@ -299,20 +601,14 @@
             }
 
             if (otp === '123456') {
-                const { data, error } = await cinemaDb
-                    .from('users')
-                    .select('*')
-                    .eq('phone', phone)
-                    .maybeSingle();
-
-                if (error || !data) {
+                const user = await getUserByPhone(phone);
+                if (!user) {
                     showToast('❌ کاربری یافت نشد', 'error');
                     return;
                 }
-
-                currentUser = data;
-                currentRole = data.role;
-                localStorage.setItem('cinema_user', JSON.stringify(data));
+                currentUser = user;
+                currentRole = user.role;
+                localStorage.setItem('cinema_user', JSON.stringify(user));
                 updateUI();
                 loadData();
                 window.closeModal('loginModal');
@@ -334,82 +630,28 @@
                 return;
             }
 
-            const { data: existing } = await cinemaDb
-                .from('users')
-                .select('phone')
-                .eq('phone', phone)
-                .maybeSingle();
-
+            const existing = await getUserByPhone(phone);
             if (existing) {
                 showToast('❌ این شماره قبلاً ثبت شده', 'error');
                 return;
             }
 
-            const { data, error } = await cinemaDb
-                .from('users')
-                .insert({
-                    phone: phone,
-                    first_name: firstName,
-                    last_name: lastName,
-                    father_name: fatherName,
-                    role: 'user'
-                })
-                .select()
-                .single();
-
-            if (error) {
-                showToast('❌ خطا: ' + error.message, 'error');
-                return;
-            }
-
-            if (data) {
-                const { data: newUser } = await cinemaDb
-                    .from('users')
-                    .select('*')
-                    .eq('id', data.id)
-                    .single();
-
-                currentUser = newUser || data;
+            try {
+                const newUser = await insertUser({ phone, first_name: firstName, last_name: lastName, father_name: fatherName, role: 'user' });
+                currentUser = newUser;
                 currentRole = 'user';
-                localStorage.setItem('cinema_user', JSON.stringify(currentUser));
+                localStorage.setItem('cinema_user', JSON.stringify(newUser));
                 updateUI();
                 loadData();
                 window.closeModal('registerModal');
-                showToast(`✅ ثبت‌نام موفق! کد: ${currentUser.code}`, 'success');
+                showToast(`✅ ثبت‌نام موفق! کد: ${newUser.code}`, 'success');
+            } catch (e) {
+                showToast('❌ خطا در ثبت‌نام', 'error');
             }
         });
     }
 
-    function updateUI() {
-        const userName = document.getElementById('userName');
-        const loginBtn = document.getElementById('loginBtn');
-        const registerBtn = document.getElementById('registerBtn');
-        const profileLink = document.getElementById('profileLink');
-        const adminLink = document.getElementById('adminLink');
-
-        if (currentUser) {
-            userName.textContent = currentUser.first_name + ' ' + currentUser.last_name;
-            loginBtn.innerHTML = '🚪 خروج';
-            loginBtn.className = 'btn btn-danger btn-sm';
-            registerBtn.style.display = 'none';
-            profileLink.style.display = 'inline';
-            adminLink.style.display = (currentRole === 'admin1' || currentRole === 'admin2') ? 'inline' : 'none';
-            loadProfile();
-            if (currentRole === 'admin1' || currentRole === 'admin2') loadAdmin('users');
-        } else {
-            userName.textContent = 'میهمان';
-            loginBtn.innerHTML = '🔑 ورود';
-            loginBtn.className = 'btn btn-primary btn-sm';
-            registerBtn.style.display = 'inline-flex';
-            registerBtn.className = 'btn btn-success btn-sm';
-            profileLink.style.display = 'none';
-            adminLink.style.display = 'none';
-            document.getElementById('profileInfo').innerHTML = 'لطفاً وارد شوید';
-            document.getElementById('myBookings').innerHTML = '';
-        }
-    }
-
-    async function logout() {
+    function logout() {
         currentUser = null;
         currentRole = 'user';
         localStorage.removeItem('cinema_user');
@@ -417,215 +659,7 @@
         showToast('👋 خارج شدید', 'info');
     }
 
-    // ===== پروفایل =====
-    async function loadProfile() {
-        if (!currentUser) return;
-        document.getElementById('profileInfo').innerHTML = `
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;">
-                <div><span style="opacity:0.5;">نام</span><br><strong>${currentUser.first_name} ${currentUser.last_name}</strong></div>
-                <div><span style="opacity:0.5;">نام پدر</span><br><strong>${currentUser.father_name || '-'}</strong></div>
-                <div><span style="opacity:0.5;">تلفن</span><br><strong>${currentUser.phone}</strong></div>
-                <div><span style="opacity:0.5;">کد یکتا</span><br><span style="background:#ffd200;color:#1a1a2e;padding:4px 16px;border-radius:30px;font-weight:700;">${currentUser.code}</span></div>
-                <div><span style="opacity:0.5;">نقش</span><br><strong>${currentUser.role === 'admin1' ? '⭐ ادمین کل' : currentUser.role === 'admin2' ? 'ادمین دوم' : 'کاربر'}</strong></div>
-                <div><span style="opacity:0.5;">سطح دسترسی</span><br><strong>${currentUser.role === 'admin1' ? '🔓 کامل' : currentUser.role === 'admin2' ? '🔓 محدود' : '🔒 عادی'}</strong></div>
-            </div>
-        `;
-        loadBookings();
-    }
-
-    async function loadBookings() {
-        if (!currentUser) return;
-        const container = document.getElementById('myBookings');
-        if (!container) return;
-        const { data } = await cinemaDb.from('bookings').select('*, movies(name)').eq('user_id', currentUser.id);
-        if (!data || data.length === 0) {
-            container.innerHTML = '<p style="opacity:0.5;">🎫 هیچ رزروی ندارید</p>';
-            return;
-        }
-        let html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
-        data.forEach(b => {
-            html += `<tr><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status === 'active' ? '✅ فعال' : '❌ لغو شده'}</td></tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    }
-
-    // ===== فیلم‌ها =====
-    async function loadMovies(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
-
-        const { data } = await cinemaDb.from('movies').select('*').order('release_date');
-        if (!data || data.length === 0) {
-            container.innerHTML = '<p style="opacity:0.5;text-align:center;padding:30px;">🎬 هیچ فیلمی یافت نشد</p>';
-            return;
-        }
-
-        let html = '';
-        data.forEach(m => {
-            const statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
-            html += `
-                <div class="movie-card">
-                    <div class="icon"><i class="fas fa-film"></i></div>
-                    <h3>${m.name}</h3>
-                    <div class="badge">${statusMap[m.status] || m.status}</div>
-                    <p style="opacity:0.6;font-size:13px;">${formatDate(m.release_date)}</p>
-                    <div class="price">${m.price.toLocaleString()} تومان</div>
-                    ${m.status === 'now_showing' && currentUser ? `<button class="btn btn-primary btn-sm" onclick="window.bookMovie('${m.id}')">🎟️ رزرو</button>` : ''}
-                    ${m.status === 'now_showing' && !currentUser ? `<button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;cursor:not-allowed;" onclick="showToast('لطفاً وارد شوید','error')">🎟️ رزرو</button>` : ''}
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    // تابع رزرو سراسری
-    window.bookMovie = async function(movieId) {
-        if (!currentUser) {
-            showToast('⚠️ لطفاً وارد شوید', 'error');
-            return;
-        }
-        const count = prompt('🎫 تعداد بلیط (حداکثر ۴):', '1');
-        if (!count) return;
-        const num = parseInt(count);
-        if (num < 1 || num > 4) { showToast('❌ تعداد ۱ تا ۴', 'error'); return; }
-
-        const { error } = await cinemaDb.from('bookings').insert({
-            user_id: currentUser.id,
-            movie_id: movieId,
-            ticket_count: num,
-            seat_numbers: [],
-            expiry_date: new Date(Date.now() + 86400000).toISOString(),
-            status: 'active'
-        });
-        if (error) {
-            showToast('❌ ' + error.message, 'error');
-        } else {
-            showToast('✅ رزرو موفق!', 'success');
-            loadBookings();
-            loadStats();
-        }
-    };
-
-    // ===== آمار =====
-    async function loadStats() {
-        const [users, movies, bookings] = await Promise.all([
-            cinemaDb.from('users').select('*', { count: 'exact', head: true }),
-            cinemaDb.from('movies').select('*', { count: 'exact', head: true }),
-            cinemaDb.from('bookings').select('*', { count: 'exact', head: true })
-        ]);
-        document.getElementById('statUsers').textContent = users.count || 0;
-        document.getElementById('statMovies').textContent = movies.count || 0;
-        document.getElementById('statBookings').textContent = bookings.count || 0;
-    }
-
-    // ===== مدیریت =====
-    async function loadAdmin(tab) {
-        const container = document.getElementById('adminContent');
-        if (!currentUser || (currentRole !== 'admin1' && currentRole !== 'admin2')) {
-            container.innerHTML = '🔒 شما دسترسی مدیریت ندارید';
-            return;
-        }
-
-        container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
-
-        if (tab === 'users') {
-            const { data } = await cinemaDb.from('users').select('*');
-            let html = '<div class="glass-title" style="font-size:18px;">👥 کاربران</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تلفن</th><th>کد</th><th>نقش</th><th>سطح</th></tr></thead><tbody>';
-            data.forEach(u => {
-                const role = u.role === 'admin1' ? '⭐ ادمین کل' : u.role === 'admin2' ? 'ادمین دوم' : 'کاربر';
-                const level = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
-                html += `<tr><td>${u.first_name} ${u.last_name}</td><td>${u.phone}</td><td style="color:#ffd200;">${u.code}</td><td>${role}</td><td>${level}</td></tr>`;
-            });
-            html += '</tbody></table></div>';
-            html += `<button class="btn btn-primary" onclick="window.exportExcel()" style="margin-top:15px;">📊 خروجی اکسل</button>`;
-            container.innerHTML = html;
-        } else if (tab === 'movies') {
-            const { data } = await cinemaDb.from('movies').select('*');
-            let html = '<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تاریخ</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th></tr></thead><tbody>';
-            data.forEach(m => {
-                html += `<tr><td>${m.name}</td><td>${formatDate(m.release_date)}</td><td>${m.capacity}</td><td>${m.price.toLocaleString()}</td><td>${m.status}</td></tr>`;
-            });
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        } else if (tab === 'bookings') {
-            const { data } = await cinemaDb.from('bookings').select('*, users(first_name,last_name), movies(name)');
-            let html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
-            data.forEach(b => {
-                html += `<tr><td>${b.users?.first_name || ''} ${b.users?.last_name || ''}</td><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status}</td></tr>`;
-            });
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        } else if (tab === 'addMovie') {
-            if (currentRole !== 'admin1') {
-                container.innerHTML = '🔒 فقط ادمین کل می‌تواند فیلم اضافه کند';
-                return;
-            }
-            container.innerHTML = `
-                <div class="glass-title" style="font-size:18px;">➕ افزودن فیلم</div>
-                <form id="addForm">
-                    <div class="form-group"><label>نام فیلم</label><input type="text" id="mName" placeholder="تایتانیک" required></div>
-                    <div class="form-group"><label>تاریخ اکران</label><input type="date" id="mDate" required></div>
-                    <div class="form-group"><label>ظرفیت</label><input type="number" id="mCapacity" placeholder="100" required></div>
-                    <div class="form-group"><label>قیمت</label><input type="number" id="mPrice" placeholder="150000" required></div>
-                    <div class="form-group"><label>وضعیت</label>
-                        <select id="mStatus">
-                            <option value="coming_soon">به زودی</option>
-                            <option value="now_showing">در حال اکران</option>
-                            <option value="ended">پایان یافته</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">➕ افزودن</button>
-                </form>
-            `;
-            document.getElementById('addForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('mName').value.trim();
-                const release_date = document.getElementById('mDate').value;
-                const capacity = parseInt(document.getElementById('mCapacity').value);
-                const price = parseInt(document.getElementById('mPrice').value);
-                const status = document.getElementById('mStatus').value;
-                if (!name || !release_date || !capacity || !price) {
-                    showToast('❌ همه فیلدها را پر کنید', 'error');
-                    return;
-                }
-                const { error } = await cinemaDb.from('movies').insert({ name, release_date, capacity, price, status });
-                if (error) {
-                    showToast('❌ ' + error.message, 'error');
-                } else {
-                    showToast('✅ فیلم اضافه شد!', 'success');
-                    loadAdmin('movies');
-                    loadMovies('homeMovies');
-                    loadStats();
-                }
-            });
-        } else if (tab === 'report') {
-            container.innerHTML = `
-                <div class="glass-title" style="font-size:18px;">📊 گزارشات</div>
-                <button class="btn btn-primary" onclick="window.exportExcel()">📊 خروجی اکسل</button>
-            `;
-        }
-    }
-
-    // ===== خروجی اکسل =====
-    window.exportExcel = async function() {
-        const { data } = await cinemaDb.rpc('get_users_report');
-        if (!data) { showToast('❌ خطا', 'error'); return; }
-        let csv = 'نام کامل,تلفن,کد یکتا,نقش,سطح دسترسی\n';
-        data.forEach(row => {
-            const level = row.role === 'admin1' ? 'کامل' : row.role === 'admin2' ? 'محدود' : 'عادی';
-            csv += `"${row.full_name}","${row.phone}","${row.code}","${row.role}","${level}"\n`;
-        });
-        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'گزارش_کاربران.csv';
-        link.click();
-        showToast('✅ خروجی دانلود شد', 'success');
-    };
-
-    // ===== ناوبری =====
+    // ===== Navigation =====
     function initNav() {
         document.querySelectorAll('[data-page]').forEach(el => {
             el.addEventListener('click', function(e) {
@@ -650,8 +684,9 @@
         if (currentUser) loadProfile();
     }
 
-    // ===== راه‌اندازی =====
-    document.addEventListener('DOMContentLoaded', function() {
+    // ===== Startup =====
+    document.addEventListener('DOMContentLoaded', async function() {
+        await initSupabase();
         initAuth();
         initNav();
         document.getElementById('saveThemeBtn').addEventListener('click', () => {
@@ -661,11 +696,12 @@
                 showToast('⚠️ ابتدا وارد شوید', 'error');
             }
         });
+        loadData();
     });
 
     console.log('🎬 سینما آماده است!');
     console.log('📌 ورود: شماره 09120000001 - کد 123456');
-})(); // پایان IIFE
+})();
 </script>
 
 </body>
