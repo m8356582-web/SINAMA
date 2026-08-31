@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
     <style>
-        /* ===== استایل‌ها ===== */
         *{margin:0;padding:0;box-sizing:border-box;user-select:none}
         body{font-family:'Vazirmatn',sans-serif;min-height:100vh;background:linear-gradient(135deg,#0a1628,#1a2a4a,#0d1b2a);color:#e0e8f0}
         .container{max-width:1200px;margin:0 auto;padding:20px}
@@ -413,7 +412,6 @@
             return data;
         }
 
-        // ===== اصلاح شده: use String(id) =====
         async function updateUser(id, data) {
             if (useMockData) {
                 const idx = mockUsers.findIndex(u => String(u.id) === String(id));
@@ -435,7 +433,6 @@
             }
         }
 
-        // ===== اصلاح شده: use String(id) =====
         async function deleteUser(id) {
             if (useMockData) {
                 const idx = mockUsers.findIndex(u => String(u.id) === String(id));
@@ -547,6 +544,10 @@
         let currentTheme = { ...THEMES['سلطنتی'] };
 
         function applyTheme(colors) {
+            // اگر colors undefined بود، از تم پیش‌فرض استفاده کن
+            if (!colors) {
+                colors = THEMES['سلطنتی'];
+            }
             document.body.style.background = colors.background || 'linear-gradient(135deg, #0a1628, #1a2a4a, #0d1b2a)';
             document.body.style.color = colors.text || '#e0e8f0';
             currentTheme = { ...colors };
@@ -1110,7 +1111,6 @@
             container.innerHTML = html;
         }
 
-        // ===== اصلاح شده: استفاده از String(id) برای مقایسه =====
         window.editUser = async function(userId) {
             try {
                 const users = await getUsers();
@@ -1161,7 +1161,6 @@
             }
         });
 
-        // ===== اصلاح شده: استفاده از String(id) برای مقایسه =====
         window.promoteUser = async function(userId) {
             const users = await getUsers();
             const user = users.find(u => String(u.id) === String(userId));
@@ -1183,7 +1182,6 @@
             }
         };
 
-        // ===== اصلاح شده: استفاده از String(id) برای مقایسه =====
         window.demoteUser = async function(userId) {
             const users = await getUsers();
             const user = users.find(u => String(u.id) === String(userId));
@@ -1206,7 +1204,6 @@
             }
         };
 
-        // ===== اصلاح شده: استفاده از String(id) برای مقایسه =====
         window.deleteUserAccount = async function(userId) {
             const users = await getUsers();
             const user = users.find(u => String(u.id) === String(userId));
@@ -1532,7 +1529,9 @@
             initAuth();
             initNav();
             renderThemePresets();
-            applyTheme(THEMES['سلطنتي']);
+            // اعمال تم پیش‌فرض با بررسی undefined
+            applyTheme(THEMES['سلطنتی'] || { background: 'linear-gradient(135deg, #0a1628, #1a2a4a, #0d1b2a)', primary: '#1a4a8a',
+                accent: '#ffd700', text: '#e0e8f0' });
 
             document.getElementById('saveThemeBtn').addEventListener('click', async () => {
                 if (currentUser) {
