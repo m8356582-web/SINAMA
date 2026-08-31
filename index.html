@@ -6,8 +6,10 @@
     <title>🎬 سینما</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- بارگذاری Supabase از CDN با نسخه مشخص -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
     <style>
+        /* تمام استایل‌ها بدون تغییر */
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Vazirmatn', sans-serif;
@@ -104,7 +106,7 @@
         .stat-card .label { font-size:14px; opacity:0.7; }
         .form-group { margin-bottom:18px; }
         .form-group label { display:block; font-weight:500; margin-bottom:6px; opacity:0.8; }
-        .form-group input {
+        .form-group input, .form-group select {
             width:100%;
             padding:14px 18px;
             background:rgba(255,255,255,0.06);
@@ -115,7 +117,7 @@
             transition:0.3s;
             font-family:'Vazirmatn',sans-serif;
         }
-        .form-group input:focus { border-color:#ffd200; outline:none; background:rgba(255,255,255,0.1); }
+        .form-group input:focus, .form-group select:focus { border-color:#ffd200; outline:none; background:rgba(255,255,255,0.1); }
         .form-group input::placeholder { color:rgba(255,255,255,0.3); }
         .modal-overlay {
             position:fixed;
@@ -366,437 +368,457 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-// ===== تنظیمات Supabase (فقط یک بار) =====
-const SUPABASE_URL = 'https://ufwzjqnnfajgdaifqobz.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmd3pqcW5uZmFqZ2RhaWZxb2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MzE3NzIsImV4cCI6MjEwMzUwNzc3Mn0.vlVNwSNcUNwM7D4BAPlkx8g1_iBVsmJgnjJWvF3FVnI';
+// =============================================
+// برای جلوگیری از تداخل و خطای تکراری، کل کد را داخل IIFE قرار می‌دهیم
+// =============================================
+(function() {
+    // ===== تنظیمات Supabase =====
+    const SUPABASE_URL = 'https://ufwzjqnnfajgdaifqobz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmd3pqcW5uZmFqZ2RhaWZxb2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MzE3NzIsImV4cCI6MjEwMzUwNzc3Mn0.vlVNwSNcUNwM7D4BAPlkx8g1_iBVsmJgnjJWvF3FVnI';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let currentUser = null;
-let currentRole = 'user';
-
-function showToast(msg, type = 'info') {
-    const c = document.getElementById('toastContainer');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    t.textContent = msg;
-    c.appendChild(t);
-    setTimeout(() => t.remove(), 4000);
-}
-
-function formatDate(d) {
-    if (!d) return '-';
-    return new Date(d).toLocaleDateString('fa-IR');
-}
-
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-// ===== احراز هویت =====
-function initAuth() {
-    const saved = localStorage.getItem('cinema_user');
-    if (saved) {
-        try {
-            const user = JSON.parse(saved);
-            currentUser = user;
-            currentRole = user.role || 'user';
-            updateUI();
-            loadData();
-        } catch(e) {}
+    // بررسی بارگذاری کتابخانه Supabase
+    if (typeof window.supabase === 'undefined') {
+        console.error('کتابخانه Supabase بارگذاری نشده است. لطفاً اتصال اینترنت را بررسی کنید.');
+        // نمایش پیام خطا به کاربر
+        document.body.innerHTML = '<div style="text-align:center;padding:50px;color:#fff;font-family:Vazirmatn;">❌ خطا در بارگذاری کتابخانه Supabase. لطفاً صفحه را دوباره بارگذاری کنید.</div>';
+        return; // توقف اجرای بقیه کد
     }
 
-    document.getElementById('loginBtn').addEventListener('click', function() {
-        if (currentUser) {
-            logout();
-        } else {
-            openModal('loginModal');
+    // ساخت کلاینت Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // متغیرهای سراسری (در محدوده IIFE)
+    let currentUser = null;
+    let currentRole = 'user';
+
+    // توابع کمکی
+    function showToast(msg, type = 'info') {
+        const c = document.getElementById('toastContainer');
+        if (!c) return;
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+    }
+
+    function formatDate(d) {
+        if (!d) return '-';
+        return new Date(d).toLocaleDateString('fa-IR');
+    }
+
+    window.openModal = function(id) { document.getElementById(id).classList.add('active'); };
+    window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); };
+
+    // ===== احراز هویت =====
+    function initAuth() {
+        const saved = localStorage.getItem('cinema_user');
+        if (saved) {
+            try {
+                const user = JSON.parse(saved);
+                currentUser = user;
+                currentRole = user.role || 'user';
+                updateUI();
+                loadData();
+            } catch(e) {}
         }
-    });
 
-    document.getElementById('registerBtn').addEventListener('click', function() {
-        if (currentUser) {
-            showToast('شما وارد شده‌اید', 'info');
-        } else {
-            openModal('registerModal');
-        }
-    });
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            if (currentUser) {
+                logout();
+            } else {
+                window.openModal('loginModal');
+            }
+        });
 
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const phone = document.getElementById('loginPhone').value.trim();
-        const otp = document.getElementById('loginOTP').value.trim();
+        document.getElementById('registerBtn').addEventListener('click', function() {
+            if (currentUser) {
+                showToast('شما وارد شده‌اید', 'info');
+            } else {
+                window.openModal('registerModal');
+            }
+        });
 
-        if (!phone || !otp) {
-            showToast('لطفاً همه فیلدها را پر کنید', 'error');
-            return;
-        }
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginPhone').value.trim();
+            const otp = document.getElementById('loginOTP').value.trim();
 
-        if (otp === '123456') {
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('phone', phone)
-                .maybeSingle();
-
-            if (error || !data) {
-                showToast('❌ کاربری یافت نشد', 'error');
+            if (!phone || !otp) {
+                showToast('لطفاً همه فیلدها را پر کنید', 'error');
                 return;
             }
 
-            currentUser = data;
-            currentRole = data.role;
-            localStorage.setItem('cinema_user', JSON.stringify(data));
-            updateUI();
-            loadData();
-            closeModal('loginModal');
-            showToast(`✅ خوش آمدید ${currentUser.first_name}!`, 'success');
-        } else {
-            showToast('❌ کد اشتباه است', 'error');
-        }
-    });
+            if (otp === '123456') {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('phone', phone)
+                    .maybeSingle();
 
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const phone = document.getElementById('regPhone').value.trim();
-        const firstName = document.getElementById('regFirstName').value.trim();
-        const lastName = document.getElementById('regLastName').value.trim();
-        const fatherName = document.getElementById('regFatherName').value.trim();
+                if (error || !data) {
+                    showToast('❌ کاربری یافت نشد', 'error');
+                    return;
+                }
 
-        if (!phone || !firstName || !lastName || !fatherName) {
-            showToast('❌ همه فیلدها را پر کنید', 'error');
-            return;
-        }
-
-        const { data: existing } = await supabase
-            .from('users')
-            .select('phone')
-            .eq('phone', phone)
-            .maybeSingle();
-
-        if (existing) {
-            showToast('❌ این شماره قبلاً ثبت شده', 'error');
-            return;
-        }
-
-        const { data, error } = await supabase
-            .from('users')
-            .insert({
-                phone: phone,
-                first_name: firstName,
-                last_name: lastName,
-                father_name: fatherName,
-                role: 'user'
-            })
-            .select()
-            .single();
-
-        if (error) {
-            showToast('❌ خطا: ' + error.message, 'error');
-            return;
-        }
-
-        if (data) {
-            const { data: newUser } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', data.id)
-                .single();
-
-            currentUser = newUser || data;
-            currentRole = 'user';
-            localStorage.setItem('cinema_user', JSON.stringify(currentUser));
-            updateUI();
-            loadData();
-            closeModal('registerModal');
-            showToast(`✅ ثبت‌نام موفق! کد: ${currentUser.code}`, 'success');
-        }
-    });
-}
-
-function updateUI() {
-    const userName = document.getElementById('userName');
-    const loginBtn = document.getElementById('loginBtn');
-    const registerBtn = document.getElementById('registerBtn');
-    const profileLink = document.getElementById('profileLink');
-    const adminLink = document.getElementById('adminLink');
-
-    if (currentUser) {
-        userName.textContent = currentUser.first_name + ' ' + currentUser.last_name;
-        loginBtn.innerHTML = '🚪 خروج';
-        loginBtn.className = 'btn btn-danger btn-sm';
-        registerBtn.style.display = 'none';
-        profileLink.style.display = 'inline';
-        adminLink.style.display = (currentRole === 'admin1' || currentRole === 'admin2') ? 'inline' : 'none';
-        loadProfile();
-        if (currentRole === 'admin1' || currentRole === 'admin2') loadAdmin('users');
-    } else {
-        userName.textContent = 'میهمان';
-        loginBtn.innerHTML = '🔑 ورود';
-        loginBtn.className = 'btn btn-primary btn-sm';
-        registerBtn.style.display = 'inline-flex';
-        registerBtn.className = 'btn btn-success btn-sm';
-        profileLink.style.display = 'none';
-        adminLink.style.display = 'none';
-        document.getElementById('profileInfo').innerHTML = 'لطفاً وارد شوید';
-        document.getElementById('myBookings').innerHTML = '';
-    }
-}
-
-async function logout() {
-    currentUser = null;
-    currentRole = 'user';
-    localStorage.removeItem('cinema_user');
-    updateUI();
-    showToast('👋 خارج شدید', 'info');
-}
-
-// ===== پروفایل =====
-async function loadProfile() {
-    if (!currentUser) return;
-    document.getElementById('profileInfo').innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;">
-            <div><span style="opacity:0.5;">نام</span><br><strong>${currentUser.first_name} ${currentUser.last_name}</strong></div>
-            <div><span style="opacity:0.5;">نام پدر</span><br><strong>${currentUser.father_name || '-'}</strong></div>
-            <div><span style="opacity:0.5;">تلفن</span><br><strong>${currentUser.phone}</strong></div>
-            <div><span style="opacity:0.5;">کد یکتا</span><br><span style="background:#ffd200;color:#1a1a2e;padding:4px 16px;border-radius:30px;font-weight:700;">${currentUser.code}</span></div>
-            <div><span style="opacity:0.5;">نقش</span><br><strong>${currentUser.role === 'admin1' ? '⭐ ادمین کل' : currentUser.role === 'admin2' ? 'ادمین دوم' : 'کاربر'}</strong></div>
-            <div><span style="opacity:0.5;">سطح دسترسی</span><br><strong>${currentUser.role === 'admin1' ? '🔓 کامل' : currentUser.role === 'admin2' ? '🔓 محدود' : '🔒 عادی'}</strong></div>
-        </div>
-    `;
-    loadBookings();
-}
-
-async function loadBookings() {
-    if (!currentUser) return;
-    const container = document.getElementById('myBookings');
-    const { data } = await supabase.from('bookings').select('*, movies(name)').eq('user_id', currentUser.id);
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p style="opacity:0.5;">🎫 هیچ رزروی ندارید</p>';
-        return;
-    }
-    let html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
-    data.forEach(b => {
-        html += `<tr><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status === 'active' ? '✅ فعال' : '❌ لغو شده'}</td></tr>`;
-    });
-    html += '</tbody></table>';
-    container.innerHTML = html;
-}
-
-// ===== فیلم‌ها =====
-async function loadMovies(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
-
-    const { data } = await supabase.from('movies').select('*').order('release_date');
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p style="opacity:0.5;text-align:center;padding:30px;">🎬 هیچ فیلمی یافت نشد</p>';
-        return;
-    }
-
-    let html = '';
-    data.forEach(m => {
-        const statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
-        html += `
-            <div class="movie-card">
-                <div class="icon"><i class="fas fa-film"></i></div>
-                <h3>${m.name}</h3>
-                <div class="badge">${statusMap[m.status] || m.status}</div>
-                <p style="opacity:0.6;font-size:13px;">${formatDate(m.release_date)}</p>
-                <div class="price">${m.price.toLocaleString()} تومان</div>
-                ${m.status === 'now_showing' && currentUser ? `<button class="btn btn-primary btn-sm" onclick="bookMovie('${m.id}')">🎟️ رزرو</button>` : ''}
-                ${m.status === 'now_showing' && !currentUser ? `<button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;cursor:not-allowed;" onclick="showToast('لطفاً وارد شوید','error')">🎟️ رزرو</button>` : ''}
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-window.bookMovie = async function(movieId) {
-    if (!currentUser) {
-        showToast('⚠️ لطفاً وارد شوید', 'error');
-        return;
-    }
-    const count = prompt('🎫 تعداد بلیط (حداکثر ۴):', '1');
-    if (!count) return;
-    const num = parseInt(count);
-    if (num < 1 || num > 4) { showToast('❌ تعداد ۱ تا ۴', 'error'); return; }
-
-    const { error } = await supabase.from('bookings').insert({
-        user_id: currentUser.id,
-        movie_id: movieId,
-        ticket_count: num,
-        seat_numbers: [],
-        expiry_date: new Date(Date.now() + 86400000).toISOString(),
-        status: 'active'
-    });
-    if (error) {
-        showToast('❌ ' + error.message, 'error');
-    } else {
-        showToast('✅ رزرو موفق!', 'success');
-        loadBookings();
-        loadStats();
-    }
-};
-
-// ===== آمار =====
-async function loadStats() {
-    const [users, movies, bookings] = await Promise.all([
-        supabase.from('users').select('*', { count: 'exact', head: true }),
-        supabase.from('movies').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('*', { count: 'exact', head: true })
-    ]);
-    document.getElementById('statUsers').textContent = users.count || 0;
-    document.getElementById('statMovies').textContent = movies.count || 0;
-    document.getElementById('statBookings').textContent = bookings.count || 0;
-}
-
-// ===== مدیریت =====
-async function loadAdmin(tab) {
-    const container = document.getElementById('adminContent');
-    if (!currentUser || (currentRole !== 'admin1' && currentRole !== 'admin2')) {
-        container.innerHTML = '🔒 شما دسترسی مدیریت ندارید';
-        return;
-    }
-
-    container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
-
-    if (tab === 'users') {
-        const { data } = await supabase.from('users').select('*');
-        let html = '<div class="glass-title" style="font-size:18px;">👥 کاربران</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تلفن</th><th>کد</th><th>نقش</th><th>سطح</th></tr></thead><tbody>';
-        data.forEach(u => {
-            const role = u.role === 'admin1' ? '⭐ ادمین کل' : u.role === 'admin2' ? 'ادمین دوم' : 'کاربر';
-            const level = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
-            html += `<tr><td>${u.first_name} ${u.last_name}</td><td>${u.phone}</td><td style="color:#ffd200;">${u.code}</td><td>${role}</td><td>${level}</td></tr>`;
+                currentUser = data;
+                currentRole = data.role;
+                localStorage.setItem('cinema_user', JSON.stringify(data));
+                updateUI();
+                loadData();
+                window.closeModal('loginModal');
+                showToast(`✅ خوش آمدید ${currentUser.first_name}!`, 'success');
+            } else {
+                showToast('❌ کد اشتباه است', 'error');
+            }
         });
-        html += '</tbody></table></div>';
-        html += `<button class="btn btn-primary" onclick="exportExcel()" style="margin-top:15px;">📊 خروجی اکسل</button>`;
-        container.innerHTML = html;
-    } else if (tab === 'movies') {
-        const { data } = await supabase.from('movies').select('*');
-        let html = '<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تاریخ</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th></tr></thead><tbody>';
-        data.forEach(m => {
-            html += `<tr><td>${m.name}</td><td>${formatDate(m.release_date)}</td><td>${m.capacity}</td><td>${m.price.toLocaleString()}</td><td>${m.status}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    } else if (tab === 'bookings') {
-        const { data } = await supabase.from('bookings').select('*, users(first_name,last_name), movies(name)');
-        let html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
-        data.forEach(b => {
-            html += `<tr><td>${b.users?.first_name || ''} ${b.users?.last_name || ''}</td><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        container.innerHTML = html;
-    } else if (tab === 'addMovie') {
-        if (currentRole !== 'admin1') {
-            container.innerHTML = '🔒 فقط ادمین کل می‌تواند فیلم اضافه کند';
-            return;
-        }
-        container.innerHTML = `
-            <div class="glass-title" style="font-size:18px;">➕ افزودن فیلم</div>
-            <form id="addForm">
-                <div class="form-group"><label>نام فیلم</label><input type="text" id="mName" placeholder="تایتانیک" required></div>
-                <div class="form-group"><label>تاریخ اکران</label><input type="date" id="mDate" required></div>
-                <div class="form-group"><label>ظرفیت</label><input type="number" id="mCapacity" placeholder="100" required></div>
-                <div class="form-group"><label>قیمت</label><input type="number" id="mPrice" placeholder="150000" required></div>
-                <div class="form-group"><label>وضعیت</label>
-                    <select id="mStatus">
-                        <option value="coming_soon">به زودی</option>
-                        <option value="now_showing">در حال اکران</option>
-                        <option value="ended">پایان یافته</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">➕ افزودن</button>
-            </form>
-        `;
-        document.getElementById('addForm').addEventListener('submit', async (e) => {
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const name = document.getElementById('mName').value.trim();
-            const release_date = document.getElementById('mDate').value;
-            const capacity = parseInt(document.getElementById('mCapacity').value);
-            const price = parseInt(document.getElementById('mPrice').value);
-            const status = document.getElementById('mStatus').value;
-            if (!name || !release_date || !capacity || !price) {
+            const phone = document.getElementById('regPhone').value.trim();
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName = document.getElementById('regLastName').value.trim();
+            const fatherName = document.getElementById('regFatherName').value.trim();
+
+            if (!phone || !firstName || !lastName || !fatherName) {
                 showToast('❌ همه فیلدها را پر کنید', 'error');
                 return;
             }
-            const { error } = await supabase.from('movies').insert({ name, release_date, capacity, price, status });
+
+            const { data: existing } = await supabase
+                .from('users')
+                .select('phone')
+                .eq('phone', phone)
+                .maybeSingle();
+
+            if (existing) {
+                showToast('❌ این شماره قبلاً ثبت شده', 'error');
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('users')
+                .insert({
+                    phone: phone,
+                    first_name: firstName,
+                    last_name: lastName,
+                    father_name: fatherName,
+                    role: 'user'
+                })
+                .select()
+                .single();
+
             if (error) {
-                showToast('❌ ' + error.message, 'error');
-            } else {
-                showToast('✅ فیلم اضافه شد!', 'success');
-                loadAdmin('movies');
-                loadMovies('homeMovies');
-                loadStats();
+                showToast('❌ خطا: ' + error.message, 'error');
+                return;
+            }
+
+            if (data) {
+                const { data: newUser } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', data.id)
+                    .single();
+
+                currentUser = newUser || data;
+                currentRole = 'user';
+                localStorage.setItem('cinema_user', JSON.stringify(currentUser));
+                updateUI();
+                loadData();
+                window.closeModal('registerModal');
+                showToast(`✅ ثبت‌نام موفق! کد: ${currentUser.code}`, 'success');
             }
         });
-    } else if (tab === 'report') {
-        container.innerHTML = `
-            <div class="glass-title" style="font-size:18px;">📊 گزارشات</div>
-            <button class="btn btn-primary" onclick="exportExcel()">📊 خروجی اکسل</button>
-        `;
     }
-}
 
-// ===== خروجی اکسل =====
-window.exportExcel = async function() {
-    const { data } = await supabase.rpc('get_users_report');
-    if (!data) { showToast('❌ خطا', 'error'); return; }
-    let csv = 'نام کامل,تلفن,کد یکتا,نقش,سطح دسترسی\n';
-    data.forEach(row => {
-        const level = row.role === 'admin1' ? 'کامل' : row.role === 'admin2' ? 'محدود' : 'عادی';
-        csv += `"${row.full_name}","${row.phone}","${row.code}","${row.role}","${level}"\n`;
-    });
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'گزارش_کاربران.csv';
-    link.click();
-    showToast('✅ خروجی دانلود شد', 'success');
-};
+    function updateUI() {
+        const userName = document.getElementById('userName');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const profileLink = document.getElementById('profileLink');
+        const adminLink = document.getElementById('adminLink');
 
-// ===== ناوبری =====
-function initNav() {
-    document.querySelectorAll('[data-page]').forEach(el => {
-        el.addEventListener('click', function(e) {
-            e.preventDefault();
-            const page = this.dataset.page;
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-            if (page === 'home') { loadMovies('homeMovies'); loadStats(); }
-            else if (page === 'movies') loadMovies('moviesList');
-            else if (page === 'profile' && currentUser) loadProfile();
-            else if (page === 'admin') loadAdmin('users');
+        if (currentUser) {
+            userName.textContent = currentUser.first_name + ' ' + currentUser.last_name;
+            loginBtn.innerHTML = '🚪 خروج';
+            loginBtn.className = 'btn btn-danger btn-sm';
+            registerBtn.style.display = 'none';
+            profileLink.style.display = 'inline';
+            adminLink.style.display = (currentRole === 'admin1' || currentRole === 'admin2') ? 'inline' : 'none';
+            loadProfile();
+            if (currentRole === 'admin1' || currentRole === 'admin2') loadAdmin('users');
+        } else {
+            userName.textContent = 'میهمان';
+            loginBtn.innerHTML = '🔑 ورود';
+            loginBtn.className = 'btn btn-primary btn-sm';
+            registerBtn.style.display = 'inline-flex';
+            registerBtn.className = 'btn btn-success btn-sm';
+            profileLink.style.display = 'none';
+            adminLink.style.display = 'none';
+            document.getElementById('profileInfo').innerHTML = 'لطفاً وارد شوید';
+            document.getElementById('myBookings').innerHTML = '';
+        }
+    }
+
+    async function logout() {
+        currentUser = null;
+        currentRole = 'user';
+        localStorage.removeItem('cinema_user');
+        updateUI();
+        showToast('👋 خارج شدید', 'info');
+    }
+
+    // ===== پروفایل =====
+    async function loadProfile() {
+        if (!currentUser) return;
+        document.getElementById('profileInfo').innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;">
+                <div><span style="opacity:0.5;">نام</span><br><strong>${currentUser.first_name} ${currentUser.last_name}</strong></div>
+                <div><span style="opacity:0.5;">نام پدر</span><br><strong>${currentUser.father_name || '-'}</strong></div>
+                <div><span style="opacity:0.5;">تلفن</span><br><strong>${currentUser.phone}</strong></div>
+                <div><span style="opacity:0.5;">کد یکتا</span><br><span style="background:#ffd200;color:#1a1a2e;padding:4px 16px;border-radius:30px;font-weight:700;">${currentUser.code}</span></div>
+                <div><span style="opacity:0.5;">نقش</span><br><strong>${currentUser.role === 'admin1' ? '⭐ ادمین کل' : currentUser.role === 'admin2' ? 'ادمین دوم' : 'کاربر'}</strong></div>
+                <div><span style="opacity:0.5;">سطح دسترسی</span><br><strong>${currentUser.role === 'admin1' ? '🔓 کامل' : currentUser.role === 'admin2' ? '🔓 محدود' : '🔒 عادی'}</strong></div>
+            </div>
+        `;
+        loadBookings();
+    }
+
+    async function loadBookings() {
+        if (!currentUser) return;
+        const container = document.getElementById('myBookings');
+        if (!container) return;
+        const { data } = await supabase.from('bookings').select('*, movies(name)').eq('user_id', currentUser.id);
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="opacity:0.5;">🎫 هیچ رزروی ندارید</p>';
+            return;
+        }
+        let html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
+        data.forEach(b => {
+            html += `<tr><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status === 'active' ? '✅ فعال' : '❌ لغو شده'}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    // ===== فیلم‌ها =====
+    async function loadMovies(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
+
+        const { data } = await supabase.from('movies').select('*').order('release_date');
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="opacity:0.5;text-align:center;padding:30px;">🎬 هیچ فیلمی یافت نشد</p>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(m => {
+            const statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
+            html += `
+                <div class="movie-card">
+                    <div class="icon"><i class="fas fa-film"></i></div>
+                    <h3>${m.name}</h3>
+                    <div class="badge">${statusMap[m.status] || m.status}</div>
+                    <p style="opacity:0.6;font-size:13px;">${formatDate(m.release_date)}</p>
+                    <div class="price">${m.price.toLocaleString()} تومان</div>
+                    ${m.status === 'now_showing' && currentUser ? `<button class="btn btn-primary btn-sm" onclick="window.bookMovie('${m.id}')">🎟️ رزرو</button>` : ''}
+                    ${m.status === 'now_showing' && !currentUser ? `<button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;cursor:not-allowed;" onclick="showToast('لطفاً وارد شوید','error')">🎟️ رزرو</button>` : ''}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    // تابع رزرو به صورت سراسری برای onclick
+    window.bookMovie = async function(movieId) {
+        if (!currentUser) {
+            showToast('⚠️ لطفاً وارد شوید', 'error');
+            return;
+        }
+        const count = prompt('🎫 تعداد بلیط (حداکثر ۴):', '1');
+        if (!count) return;
+        const num = parseInt(count);
+        if (num < 1 || num > 4) { showToast('❌ تعداد ۱ تا ۴', 'error'); return; }
+
+        const { error } = await supabase.from('bookings').insert({
+            user_id: currentUser.id,
+            movie_id: movieId,
+            ticket_count: num,
+            seat_numbers: [],
+            expiry_date: new Date(Date.now() + 86400000).toISOString(),
+            status: 'active'
+        });
+        if (error) {
+            showToast('❌ ' + error.message, 'error');
+        } else {
+            showToast('✅ رزرو موفق!', 'success');
+            loadBookings();
+            loadStats();
+        }
+    };
+
+    // ===== آمار =====
+    async function loadStats() {
+        const [users, movies, bookings] = await Promise.all([
+            supabase.from('users').select('*', { count: 'exact', head: true }),
+            supabase.from('movies').select('*', { count: 'exact', head: true }),
+            supabase.from('bookings').select('*', { count: 'exact', head: true })
+        ]);
+        document.getElementById('statUsers').textContent = users.count || 0;
+        document.getElementById('statMovies').textContent = movies.count || 0;
+        document.getElementById('statBookings').textContent = bookings.count || 0;
+    }
+
+    // ===== مدیریت =====
+    async function loadAdmin(tab) {
+        const container = document.getElementById('adminContent');
+        if (!currentUser || (currentRole !== 'admin1' && currentRole !== 'admin2')) {
+            container.innerHTML = '🔒 شما دسترسی مدیریت ندارید';
+            return;
+        }
+
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><p>بارگذاری...</p></div>';
+
+        if (tab === 'users') {
+            const { data } = await supabase.from('users').select('*');
+            let html = '<div class="glass-title" style="font-size:18px;">👥 کاربران</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تلفن</th><th>کد</th><th>نقش</th><th>سطح</th></tr></thead><tbody>';
+            data.forEach(u => {
+                const role = u.role === 'admin1' ? '⭐ ادمین کل' : u.role === 'admin2' ? 'ادمین دوم' : 'کاربر';
+                const level = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
+                html += `<tr><td>${u.first_name} ${u.last_name}</td><td>${u.phone}</td><td style="color:#ffd200;">${u.code}</td><td>${role}</td><td>${level}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            html += `<button class="btn btn-primary" onclick="window.exportExcel()" style="margin-top:15px;">📊 خروجی اکسل</button>`;
+            container.innerHTML = html;
+        } else if (tab === 'movies') {
+            const { data } = await supabase.from('movies').select('*');
+            let html = '<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها</div><div class="table-wrap"><table><thead><tr><th>نام</th><th>تاریخ</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th></tr></thead><tbody>';
+            data.forEach(m => {
+                html += `<tr><td>${m.name}</td><td>${formatDate(m.release_date)}</td><td>${m.capacity}</td><td>${m.price.toLocaleString()}</td><td>${m.status}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        } else if (tab === 'bookings') {
+            const { data } = await supabase.from('bookings').select('*, users(first_name,last_name), movies(name)');
+            let html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تعداد</th><th>کد</th><th>وضعیت</th></tr></thead><tbody>';
+            data.forEach(b => {
+                html += `<tr><td>${b.users?.first_name || ''} ${b.users?.last_name || ''}</td><td>${b.movies?.name || '-'}</td><td>${b.ticket_count}</td><td style="color:#ffd200;">${b.booking_code}</td><td>${b.status}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        } else if (tab === 'addMovie') {
+            if (currentRole !== 'admin1') {
+                container.innerHTML = '🔒 فقط ادمین کل می‌تواند فیلم اضافه کند';
+                return;
+            }
+            container.innerHTML = `
+                <div class="glass-title" style="font-size:18px;">➕ افزودن فیلم</div>
+                <form id="addForm">
+                    <div class="form-group"><label>نام فیلم</label><input type="text" id="mName" placeholder="تایتانیک" required></div>
+                    <div class="form-group"><label>تاریخ اکران</label><input type="date" id="mDate" required></div>
+                    <div class="form-group"><label>ظرفیت</label><input type="number" id="mCapacity" placeholder="100" required></div>
+                    <div class="form-group"><label>قیمت</label><input type="number" id="mPrice" placeholder="150000" required></div>
+                    <div class="form-group"><label>وضعیت</label>
+                        <select id="mStatus">
+                            <option value="coming_soon">به زودی</option>
+                            <option value="now_showing">در حال اکران</option>
+                            <option value="ended">پایان یافته</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">➕ افزودن</button>
+                </form>
+            `;
+            document.getElementById('addForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('mName').value.trim();
+                const release_date = document.getElementById('mDate').value;
+                const capacity = parseInt(document.getElementById('mCapacity').value);
+                const price = parseInt(document.getElementById('mPrice').value);
+                const status = document.getElementById('mStatus').value;
+                if (!name || !release_date || !capacity || !price) {
+                    showToast('❌ همه فیلدها را پر کنید', 'error');
+                    return;
+                }
+                const { error } = await supabase.from('movies').insert({ name, release_date, capacity, price, status });
+                if (error) {
+                    showToast('❌ ' + error.message, 'error');
+                } else {
+                    showToast('✅ فیلم اضافه شد!', 'success');
+                    loadAdmin('movies');
+                    loadMovies('homeMovies');
+                    loadStats();
+                }
+            });
+        } else if (tab === 'report') {
+            container.innerHTML = `
+                <div class="glass-title" style="font-size:18px;">📊 گزارشات</div>
+                <button class="btn btn-primary" onclick="window.exportExcel()">📊 خروجی اکسل</button>
+            `;
+        }
+    }
+
+    // ===== خروجی اکسل =====
+    window.exportExcel = async function() {
+        const { data } = await supabase.rpc('get_users_report');
+        if (!data) { showToast('❌ خطا', 'error'); return; }
+        let csv = 'نام کامل,تلفن,کد یکتا,نقش,سطح دسترسی\n';
+        data.forEach(row => {
+            const level = row.role === 'admin1' ? 'کامل' : row.role === 'admin2' ? 'محدود' : 'عادی';
+            csv += `"${row.full_name}","${row.phone}","${row.code}","${row.role}","${level}"\n`;
+        });
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'گزارش_کاربران.csv';
+        link.click();
+        showToast('✅ خروجی دانلود شد', 'success');
+    };
+
+    // ===== ناوبری =====
+    function initNav() {
+        document.querySelectorAll('[data-page]').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('page-' + page).classList.add('active');
+                if (page === 'home') { loadMovies('homeMovies'); loadStats(); }
+                else if (page === 'movies') loadMovies('moviesList');
+                else if (page === 'profile' && currentUser) loadProfile();
+                else if (page === 'admin') loadAdmin('users');
+            });
+        });
+        document.querySelectorAll('[data-tab]').forEach(el => {
+            el.addEventListener('click', function() { loadAdmin(this.dataset.tab); });
+        });
+    }
+
+    function loadData() {
+        loadMovies('homeMovies');
+        loadStats();
+        if (currentUser) loadProfile();
+    }
+
+    // ===== راه‌اندازی =====
+    document.addEventListener('DOMContentLoaded', function() {
+        initAuth();
+        initNav();
+        // نمایش تنظیمات تم (در صورت نیاز)
+        // ...
+        document.getElementById('saveThemeBtn').addEventListener('click', () => {
+            if (currentUser) {
+                showToast('💾 تم ذخیره شد', 'success');
+            } else {
+                showToast('⚠️ ابتدا وارد شوید', 'error');
+            }
         });
     });
-    document.querySelectorAll('[data-tab]').forEach(el => {
-        el.addEventListener('click', function() { loadAdmin(this.dataset.tab); });
-    });
-}
 
-function loadData() {
-    loadMovies('homeMovies');
-    loadStats();
-    if (currentUser) loadProfile();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    initAuth();
-    initNav();
-    document.body.style.background = 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)';
-    
-    document.getElementById('saveThemeBtn').addEventListener('click', () => {
-        if (currentUser) {
-            showToast('💾 تم ذخیره شد', 'success');
-        } else {
-            showToast('⚠️ ابتدا وارد شوید', 'error');
-        }
-    });
-});
-
-console.log('🎬 سینما آماده است!');
-console.log('📌 ورود: شماره 09120000001 - کد 123456');
+    console.log('🎬 سینما آماده است!');
+    console.log('📌 ورود: شماره 09120000001 - کد 123456');
+})(); // پایان IIFE
 </script>
 
 </body>
