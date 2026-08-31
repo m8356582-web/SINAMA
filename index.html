@@ -414,7 +414,7 @@
 
         async function updateUser(id, data) {
             if (useMockData) {
-                const idx = mockUsers.findIndex(u => u.id === id);
+                const idx = mockUsers.findIndex(u => String(u.id) === String(id));
                 if (idx === -1) throw new Error('کاربر یافت نشد');
                 mockUsers[idx] = { ...mockUsers[idx], ...data };
                 return mockUsers[idx];
@@ -435,7 +435,7 @@
 
         async function deleteUser(id) {
             if (useMockData) {
-                const idx = mockUsers.findIndex(u => u.id === id);
+                const idx = mockUsers.findIndex(u => String(u.id) === String(id));
                 if (idx === -1) throw new Error('کاربر یافت نشد');
                 mockUsers.splice(idx, 1);
                 return;
@@ -775,6 +775,7 @@
                     return;
                 }
                 const updated = await updateUser(currentUser.id, updateData);
+                if (!updated) throw new Error('به‌روزرسانی ناموفق');
                 currentUser = updated;
                 localStorage.setItem('cinema_user', JSON.stringify(updated));
                 updateUI();
@@ -1076,7 +1077,7 @@
             for (const u of users) {
                 const role = u.role === 'admin1' ? '⭐ ادمین کل' : u.role === 'admin2' ? 'ادمین دوم' : 'کاربر';
                 const level = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
-                const isSelf = u.id === currentUser.id;
+                const isSelf = String(u.id) === String(currentUser.id);
                 html += `
                         <tr>
                             <td>${u.first_name} ${u.last_name}</td>
