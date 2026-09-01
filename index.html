@@ -318,7 +318,6 @@
             const month = d.getMonth() + 1;
             const day = d.getDate();
             
-            // الگوریتم تبدیل میلادی به شمسی
             const gregorianToJalali = (gy, gm, gd) => {
                 const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
                 let jalaliDate = {};
@@ -463,7 +462,7 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        // استفاده از تابع شمسی برای فرمت تاریخ
+        // تابع فرمت تاریخ با تبدیل به شمسی
         function formatDate(date) {
             return toPersianDate(date);
         }
@@ -848,12 +847,24 @@
         // ===== PROFILE =====
         async function loadProfile() {
             if (!currentUser) return;
+            
+            // اگر کد یکتا null بود، یک کد جدید تولید کن
+            const userCode = currentUser.code || generateCode();
+            if (!currentUser.code) {
+                // به‌روزرسانی کاربر با کد جدید
+                try {
+                    await updateUser(currentUser.id, { code: userCode });
+                    currentUser.code = userCode;
+                    localStorage.setItem('cinema_user', JSON.stringify(currentUser));
+                } catch(e) {}
+            }
+            
             document.getElementById('profileInfo').innerHTML = `
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;">
                         <div><span style="opacity:0.5;">نام</span><br><strong>${currentUser.first_name} ${currentUser.last_name}</strong></div>
                         <div><span style="opacity:0.5;">نام پدر</span><br><strong>${currentUser.father_name || '-'}</strong></div>
                         <div><span style="opacity:0.5;">تلفن</span><br><strong>${currentUser.phone}</strong></div>
-                        <div><span style="opacity:0.5;">کد یکتا</span><br><span style="background:linear-gradient(135deg,#ffd700,#f0a500);color:#1a1a2e;padding:4px 16px;border-radius:30px;font-weight:700;">${currentUser.code}</span></div>
+                        <div><span style="opacity:0.5;">کد یکتا</span><br><span style="background:linear-gradient(135deg,#ffd700,#f0a500);color:#1a1a2e;padding:4px 16px;border-radius:30px;font-weight:700;">${userCode}</span></div>
                         <div><span style="opacity:0.5;">نقش</span><br><strong>${currentUser.role === 'admin1' ? '⭐ ادمین کل' : currentUser.role === 'admin2' ? 'ادمین دوم' : 'کاربر'}</strong></div>
                         <div><span style="opacity:0.5;">سطح دسترسی</span><br><strong>${currentUser.role === 'admin1' ? '🔓 کامل' : currentUser.role === 'admin2' ? '🔓 محدود' : '🔒 عادی'}</strong></div>
                     </div>
@@ -1197,11 +1208,12 @@
                 const role = u.role === 'admin1' ? '⭐ ادمین کل' : u.role === 'admin2' ? 'ادمین دوم' : 'کاربر';
                 const level = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
                 const isSelf = String(u.id) === String(currentUser.id);
+                const userCode = u.code || generateCode();
                 html += `
                         <tr>
                             <td>${u.first_name} ${u.last_name}</td>
                             <td>${u.phone}</td>
-                            <td style="color:#ffd700;">${u.code}</td>
+                            <td style="color:#ffd700;">${userCode}</td>
                             <td>${role}</td>
                             <td>${level}</td>
                             <td>
@@ -1474,7 +1486,7 @@
             let html =
                 `<div class="glass-title" style="font-size:18px;">🎟️ رزروها (${bookings.length})</div>
                     <div class="table-wrap"><table>
-                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>عملیات</th></tr></thead><tbody>`;
+                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ اکران</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>عملیات</th></tr></thead><tbody>`;
 
             for (const b of bookings) {
                 let userName = '-';
@@ -1578,7 +1590,8 @@
             let csv = 'نام کامل,تلفن,کد یکتا,نقش,سطح دسترسی\n';
             users.forEach(u => {
                 const level = u.role === 'admin1' ? 'کامل' : u.role === 'admin2' ? 'محدود' : 'عادی';
-                csv += `"${u.first_name} ${u.last_name}","${u.phone}","${u.code}","${u.role}","${level}"\n`;
+                const userCode = u.code || generateCode();
+                csv += `"${u.first_name} ${u.last_name}","${u.phone}","${userCode}","${u.role}","${level}"\n`;
             });
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
