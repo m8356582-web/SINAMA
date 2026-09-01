@@ -6,8 +6,6 @@
     <title>🎬 سینما</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
-    <!-- کتابخانه jalaali-js برای تبدیل دقیق تاریخ -->
-    <script src="https://cdn.jsdelivr.net/npm/jalaali-js@1.1.0/dist/jalaali-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;user-select:none}
@@ -308,8 +306,10 @@
         'use strict';
 
         // ============================================
-        // توابع تبدیل تاریخ با استفاده از jalaali-js
+        // توابع تبدیل تاریخ میلادی به شمسی و برعکس
         // ============================================
+        
+        // تبدیل میلادی به شمسی (برای نمایش)
         function toPersianDate(date) {
             if (!date) return '-';
             const d = typeof date === 'string' ? new Date(date) : date;
@@ -319,26 +319,11 @@
             const gm = d.getMonth() + 1;
             const gd = d.getDate();
             
-            // تبدیل با کتابخانه jalaali-js
-            const j = window.jalaali ? window.jalaali.toJalaali(gy, gm, gd) : null;
-            if (!j) {
-                // fallback: اگر کتابخانه بارگذاری نشد، از تابع دستی استفاده کن
-                return manualToPersian(gy, gm, gd);
-            }
-            
-            const monthNames = [
-                'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
-                'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
-            ];
-            return `${j.jd} ${monthNames[j.jm - 1]} ${j.jy}`;
-        }
-
-        // تابع دستی برای مواقعی که کتابخانه بارگذاری نشود
-        function manualToPersian(gy, gm, gd) {
             const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-            let jalaliDate = {};
+            let jy, jm, jd;
+            
             if (gy > 1600) {
-                let jy = gy - 1600;
+                let jy1 = gy - 1600;
                 const gy2 = gy > 1600 ? gy - 1600 : gy;
                 let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
                     g_d_m[gm - 1] + gd - 1;
@@ -350,11 +335,9 @@
                 const jy3 = jy2 + 1;
                 const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
                 const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                const jm = jm2 - 1;
-                jalaliDate.jy = jy3;
-                jalaliDate.jm = jm;
-                jalaliDate.jd = jd;
+                jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                jm = jm2 - 1;
+                jy = jy3;
             } else {
                 let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
                     g_d_m[gm - 1] + gd - 1;
@@ -366,75 +349,64 @@
                 const jy3 = jy2 + 1;
                 const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
                 const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                const jm = jm2 - 1;
-                jalaliDate.jy = jy3 - 620;
-                jalaliDate.jm = jm;
-                jalaliDate.jd = jd;
+                jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                jm = jm2 - 1;
+                jy = jy3 - 620;
             }
+            
             const monthNames = [
                 'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
                 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
             ];
-            return `${jalaliDate.jd} ${monthNames[jalaliDate.jm]} ${jalaliDate.jy}`;
+            return `${jd} ${monthNames[jm]} ${jy}`;
         }
 
-        function toPersianDateNumeric(date) {
-            if (!date) return '-';
-            const d = typeof date === 'string' ? new Date(date) : date;
-            if (isNaN(d.getTime())) return '-';
-            
-            const gy = d.getFullYear();
-            const gm = d.getMonth() + 1;
-            const gd = d.getDate();
-            
-            const j = window.jalaali ? window.jalaali.toJalaali(gy, gm, gd) : null;
-            if (!j) {
-                // fallback
-                return manualToPersianNumeric(gy, gm, gd);
-            }
-            return `${j.jy}/${String(j.jm).padStart(2, '0')}/${String(j.jd).padStart(2, '0')}`;
-        }
-
-        function manualToPersianNumeric(gy, gm, gd) {
+        // تبدیل شمسی به میلادی (برای ذخیره در دیتابیس)
+        function jalaliToGregorian(jy, jm, jd) {
             const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-            let jalaliDate = {};
-            if (gy > 1600) {
-                let jy = gy - 1600;
-                const gy2 = gy > 1600 ? gy - 1600 : gy;
-                let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
-                    g_d_m[gm - 1] + gd - 1;
-                if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
-                    if (gm > 2) days++;
+            let gy, gm, gd;
+            
+            if (jy > 979) {
+                let gy2 = jy - 979;
+                let days = 226899 + (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400);
+                days += (jm - 1) * 30 + jd;
+                if (jm > 6) days += (jm - 6) * 1;
+                if (jm > 11) days += 1;
+                
+                let gy3 = 1600;
+                let days2 = days;
+                while (days2 > 366) {
+                    let isLeap = (gy3 % 4 === 0 && gy3 % 100 !== 0) || gy3 % 400 === 0;
+                    if (days2 > 366) {
+                        days2 -= isLeap ? 366 : 365;
+                        gy3++;
+                    } else {
+                        break;
+                    }
                 }
-                const j_days = days - 226899;
-                const jy2 = Math.floor((j_days * 4 + 1) / 146097);
-                const jy3 = jy2 + 1;
-                const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
-                const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                const jm = jm2 - 1;
-                jalaliDate.jy = jy3;
-                jalaliDate.jm = jm;
-                jalaliDate.jd = jd;
+                gy = gy3;
+                let gd2 = days2;
+                for (let i = 0; i < 12; i++) {
+                    let daysInMonth = 31;
+                    if (i === 1) {
+                        daysInMonth = ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) ? 29 : 28;
+                    } else if (i === 3 || i === 5 || i === 8 || i === 10) {
+                        daysInMonth = 30;
+                    }
+                    if (gd2 <= daysInMonth) {
+                        gm = i + 1;
+                        gd = gd2;
+                        break;
+                    }
+                    gd2 -= daysInMonth;
+                }
             } else {
-                let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
-                    g_d_m[gm - 1] + gd - 1;
-                if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
-                    if (gm > 2) days++;
-                }
-                const j_days = days - 226899;
-                const jy2 = Math.floor((j_days * 4 + 1) / 146097);
-                const jy3 = jy2 + 1;
-                const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
-                const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                const jm = jm2 - 1;
-                jalaliDate.jy = jy3 - 620;
-                jalaliDate.jm = jm;
-                jalaliDate.jd = jd;
+                gy = jy + 621;
+                gm = jm;
+                gd = jd;
             }
-            return `${jalaliDate.jy}/${String(jalaliDate.jm).padStart(2, '0')}/${String(jalaliDate.jd).padStart(2, '0')}`;
+            
+            return new Date(gy, gm - 1, gd);
         }
 
         // ===== CONFIG =====
@@ -477,7 +449,7 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        // تابع اصلی فرمت تاریخ (به شمسی)
+        // تابع فرمت تاریخ (به شمسی)
         function formatDate(date) {
             return toPersianDate(date);
         }
@@ -989,7 +961,6 @@
                 const statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
                 const statusClass = m.status === 'now_showing' ? '' : m.status === 'coming_soon' ? 'soon' : 'ended';
                 const isAvailable = m.status === 'now_showing' && currentUser;
-                // نمایش تاریخ شمسی
                 const persianDate = formatDate(m.release_date);
                 html += `
                         <div class="movie-card">
@@ -1370,7 +1341,7 @@
             let html =
                 `<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها (${movies.length})</div>
                     <div class="table-wrap"><table>
-                    <thead><tr><th>نام</th><th>تاریخ اکران</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th>`;
+                    <thead><tr><th>نام</th><th>تاریخ اکران (شمسی)</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th>`;
 
             if (currentRole === 'admin1') {
                 html += `<th>عملیات</th>`;
@@ -1378,7 +1349,6 @@
             html += `</tr></thead><tbody>`;
 
             for (const m of movies) {
-                // نمایش تاریخ شمسی
                 const persianDate = formatDate(m.release_date);
                 html += `<tr>
                         <td>${m.name}</td>
@@ -1453,19 +1423,43 @@
                     <form id="addMovieForm">
                         <div class="form-group"><label>نام فیلم</label><input type="text" id="mName" placeholder="تایتانیک" required></div>
                         <div class="form-row">
-                            <div class="form-group"><label>تاریخ اکران</label><input type="date" id="mDate" required></div>
-                            <div class="form-group"><label>ساعت</label><input type="time" id="mTime"></div>
+                            <div class="form-group"><label>سال</label>
+                                <input type="number" id="mYear" placeholder="مثلا 1403" min="1300" max="1450" required>
+                            </div>
+                            <div class="form-group"><label>ماه</label>
+                                <select id="mMonth" required>
+                                    <option value="">انتخاب ماه</option>
+                                    <option value="1">فروردین</option>
+                                    <option value="2">اردیبهشت</option>
+                                    <option value="3">خرداد</option>
+                                    <option value="4">تیر</option>
+                                    <option value="5">مرداد</option>
+                                    <option value="6">شهریور</option>
+                                    <option value="7">مهر</option>
+                                    <option value="8">آبان</option>
+                                    <option value="9">آذر</option>
+                                    <option value="10">دی</option>
+                                    <option value="11">بهمن</option>
+                                    <option value="12">اسفند</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>روز</label>
+                                <input type="number" id="mDay" placeholder="مثلا 25" min="1" max="31" required>
+                            </div>
                         </div>
                         <div class="form-row">
+                            <div class="form-group"><label>ساعت</label><input type="time" id="mTime"></div>
                             <div class="form-group"><label>ظرفیت</label><input type="number" id="mCapacity" placeholder="100" required></div>
-                            <div class="form-group"><label>قیمت (تومان)</label><input type="number" id="mPrice" placeholder="150000" required></div>
                         </div>
-                        <div class="form-group"><label>وضعیت</label>
-                            <select id="mStatus">
-                                <option value="coming_soon">به زودی</option>
-                                <option value="now_showing">در حال اکران</option>
-                                <option value="ended">پایان یافته</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group"><label>قیمت (تومان)</label><input type="number" id="mPrice" placeholder="150000" required></div>
+                            <div class="form-group"><label>وضعیت</label>
+                                <select id="mStatus">
+                                    <option value="coming_soon">به زودی</option>
+                                    <option value="now_showing">در حال اکران</option>
+                                    <option value="ended">پایان یافته</option>
+                                </select>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> افزودن فیلم</button>
                     </form>
@@ -1474,16 +1468,22 @@
             document.getElementById('addMovieForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const name = document.getElementById('mName').value.trim();
-                const release_date = document.getElementById('mDate').value;
+                const year = parseInt(document.getElementById('mYear').value);
+                const month = parseInt(document.getElementById('mMonth').value);
+                const day = parseInt(document.getElementById('mDay').value);
                 const release_time = document.getElementById('mTime').value || null;
                 const capacity = parseInt(document.getElementById('mCapacity').value);
                 const price = parseInt(document.getElementById('mPrice').value);
                 const status = document.getElementById('mStatus').value;
 
-                if (!name || !release_date || !capacity || !price) {
+                if (!name || !year || !month || !day || !capacity || !price) {
                     showToast('❌ همه فیلدها را پر کنید', 'error');
                     return;
                 }
+
+                // تبدیل تاریخ شمسی به میلادی
+                const gregorianDate = jalaliToGregorian(year, month, day);
+                const release_date = gregorianDate.toISOString().split('T')[0];
 
                 try {
                     await insertMovie({ name, release_date, release_time, capacity, price, status });
@@ -1492,6 +1492,8 @@
                     loadMovies('homeMovies', 'all');
                     loadMovies('moviesList', currentFilter);
                     loadStats();
+                    // پاک کردن فرم
+                    document.getElementById('addMovieForm').reset();
                 } catch (e) {
                     showToast('❌ خطا: ' + e.message, 'error');
                 }
@@ -1503,7 +1505,7 @@
             let html =
                 `<div class="glass-title" style="font-size:18px;">🎟️ رزروها (${bookings.length})</div>
                     <div class="table-wrap"><table>
-                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ اکران</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>عملیات</th></tr></thead><tbody>`;
+                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ اکران (شمسی)</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>عملیات</th></tr></thead><tbody>`;
 
             for (const b of bookings) {
                 let userName = '-';
@@ -1620,7 +1622,7 @@
 
         window.exportBookingsExcel = async function() {
             const bookings = await getBookings();
-            let csv = 'کاربر,فیلم,تاریخ اکران,تعداد,مسافران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت\n';
+            let csv = 'کاربر,فیلم,تاریخ اکران (شمسی),تعداد,مسافران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت\n';
             for (const b of bookings) {
                 let userName = '-', movieName = '-', releaseDate = '-';
                 if (useMockData) {
@@ -1706,7 +1708,7 @@
             console.log('🎬 سینما آماده است!');
             console.log('📌 ورود: شماره 09120000001 - رمز 123456');
             console.log('📌 ثبت‌نام: هر شماره جدید با رمز حداقل ۶ کاراکتر');
-            console.log('📅 تاریخ‌ها به شمسی نمایش داده می‌شوند.');
+            console.log('📅 تاریخ‌ها به صورت شمسی نمایش داده می‌شوند و در دیتابیس میلادی ذخیره می‌شوند.');
         });
 
     })();
