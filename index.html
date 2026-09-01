@@ -229,10 +229,7 @@
                 <div class="glass-title"><i class="fas fa-ticket-alt"></i> به سینما خوش آمدید</div>
                 <p style="opacity:.6;margin-bottom:20px;">رزرو بلیط، تجربه‌ای مدرن و لوکس</p>
                 <div class="stats-row" id="homeStats">
-                    <div class="stat-card"><i class="fas fa-users"></i><div class="number" id="statUsers">0</div><div class="label">کاربران</div></div>
-                    <div class="stat-card"><i class="fas fa-film"></i><div class="number" id="statMovies">0</div><div class="label">فیلم‌ها</div></div>
-                    <div class="stat-card"><i class="fas fa-check-circle"></i><div class="number" id="statBookings">0</div><div class="label">رزروها</div></div>
-                    <div class="stat-card"><i class="fas fa-dollar-sign"></i><div class="number" id="statRevenue">0</div><div class="label">درآمد</div></div>
+                    <!-- آمار فقط برای ادمین کل نمایش داده می‌شود -->
                 </div>
             </div>
             <div class="glass">
@@ -270,12 +267,8 @@
         <div class="page" id="page-admin">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-users-cog"></i> پنل مدیریت</div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
-                    <button class="btn btn-primary btn-sm" data-tab="users"><i class="fas fa-users"></i> کاربران</button>
-                    <button class="btn btn-primary btn-sm" data-tab="movies"><i class="fas fa-film"></i> فیلم‌ها</button>
-                    <button class="btn btn-primary btn-sm" data-tab="bookings"><i class="fas fa-ticket-alt"></i> رزروها</button>
-                    <button class="btn btn-primary btn-sm" data-tab="addMovie"><i class="fas fa-plus"></i> افزودن فیلم</button>
-                    <button class="btn btn-primary btn-sm" data-tab="report"><i class="fas fa-chart-bar"></i> گزارش</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;" id="adminTabs">
+                    <!-- دکمه‌ها توسط جاوااسکریپت تولید می‌شوند -->
                 </div>
                 <div id="adminContent">...</div>
             </div>
@@ -437,6 +430,7 @@
                 status: 'coming_soon' }
         ];
         const mockBookings = [];
+        const mockAttendances = [];
 
         // ===== HELPERS =====
         function showToast(msg, type = 'info') {
@@ -449,7 +443,6 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        // تابع فرمت تاریخ (به شمسی)
         function formatDate(date) {
             return toPersianDate(date);
         }
@@ -615,6 +608,37 @@
                 return mockBookings[idx];
             }
             const { data: result, error } = await supabaseClient.from('bookings').update(data).eq('id', id).select()
+                .single();
+            if (error) throw error;
+            return result;
+        }
+
+        // ===== ATTENDANCE OPERATIONS =====
+        async function getAttendances() {
+            if (useMockData) return [...mockAttendances];
+            const { data } = await supabaseClient.from('attendances').select('*, bookings(*), users(*), movies(*)').order('check_in_time', { ascending: false });
+            return data || [];
+        }
+
+        async function insertAttendance(attendance) {
+            if (useMockData) {
+                const newAttendance = { ...attendance, id: 'a' + (mockAttendances.length + 1) };
+                mockAttendances.push(newAttendance);
+                return newAttendance;
+            }
+            const { data, error } = await supabaseClient.from('attendances').insert(attendance).select().single();
+            if (error) throw error;
+            return data;
+        }
+
+        async function updateAttendance(id, data) {
+            if (useMockData) {
+                const idx = mockAttendances.findIndex(a => a.id === id);
+                if (idx === -1) throw new Error('حضور یافت نشد');
+                mockAttendances[idx] = { ...mockAttendances[idx], ...data };
+                return mockAttendances[idx];
+            }
+            const { data: result, error } = await supabaseClient.from('attendances').update(data).eq('id', id).select()
                 .single();
             if (error) throw error;
             return result;
@@ -809,7 +833,12 @@
                 profileLink.style.display = 'inline';
                 adminLink.style.display = (currentRole === 'admin1' || currentRole === 'admin2') ? 'inline' : 'none';
                 loadProfile();
-                if (currentRole === 'admin1' || currentRole === 'admin2') loadAdmin('users');
+                if (currentRole === 'admin1' || currentRole === 'admin2') {
+                    renderAdminTabs();
+                    loadAdmin('bookings');
+                }
+                // نمایش آمار فقط برای ادمین کل
+                loadStats();
             } else {
                 userName.textContent = 'میهمان';
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ورود';
@@ -820,7 +849,44 @@
                 adminLink.style.display = 'none';
                 document.getElementById('profileInfo').innerHTML = 'لطفاً وارد شوید';
                 document.getElementById('myBookings').innerHTML = '';
+                // پنهان کردن آمار
+                const statsContainer = document.getElementById('homeStats');
+                if (statsContainer) {
+                    statsContainer.innerHTML = `
+                        <div style="text-align:center;padding:20px;opacity:0.5;grid-column:1/-1;">
+                            <i class="fas fa-lock" style="font-size:24px;color:#ffd700;"></i>
+                            <p style="margin-top:10px;">آمار فقط برای ادمین کل قابل مشاهده است</p>
+                        </div>
+                    `;
+                }
             }
+        }
+
+        // ===== RENDER ADMIN TABS =====
+        function renderAdminTabs() {
+            const container = document.getElementById('adminTabs');
+            if (!container) return;
+            
+            let html = '';
+            if (currentRole === 'admin1') {
+                html += `
+                    <button class="btn btn-primary btn-sm" data-tab="users"><i class="fas fa-users"></i> کاربران</button>
+                    <button class="btn btn-primary btn-sm" data-tab="movies"><i class="fas fa-film"></i> فیلم‌ها</button>
+                    <button class="btn btn-primary btn-sm" data-tab="addMovie"><i class="fas fa-plus"></i> افزودن فیلم</button>
+                    <button class="btn btn-primary btn-sm" data-tab="report"><i class="fas fa-chart-bar"></i> گزارش</button>
+                `;
+            }
+            if (currentRole === 'admin1' || currentRole === 'admin2') {
+                html += `
+                    <button class="btn btn-primary btn-sm" data-tab="bookings"><i class="fas fa-ticket-alt"></i> رزروها</button>
+                    <button class="btn btn-primary btn-sm" data-tab="attendance"><i class="fas fa-user-check"></i> حضور و غیاب</button>
+                `;
+            }
+            container.innerHTML = html;
+            
+            container.querySelectorAll('[data-tab]').forEach(el => {
+                el.addEventListener('click', function() { loadAdmin(this.dataset.tab); });
+            });
         }
 
         async function logout() {
@@ -990,19 +1056,23 @@
                 return;
             }
             selectedMovieId = movieId;
-            const movies = await getMovies();
-            const movie = movies.find(m => m.id === movieId);
-            if (!movie) {
-                showToast('❌ فیلم یافت نشد', 'error');
-                return;
+            try {
+                const movies = await getMovies();
+                const movie = movies.find(m => m.id === movieId);
+                if (!movie) {
+                    showToast('❌ فیلم یافت نشد', 'error');
+                    return;
+                }
+                document.getElementById('bookingMovieName').value = movie.name;
+                document.getElementById('bookingPrice').value = formatCurrency(movie.price) + ' تومان';
+                document.getElementById('bookingTicketCount').value = 1;
+                document.getElementById('bookingTicketCount').max = movie.capacity;
+                passengerCount = 1;
+                renderPassengers(movie.price);
+                openModal('bookingModal');
+            } catch(e) {
+                showToast('❌ خطا: ' + e.message, 'error');
             }
-            document.getElementById('bookingMovieName').value = movie.name;
-            document.getElementById('bookingPrice').value = formatCurrency(movie.price) + ' تومان';
-            document.getElementById('bookingTicketCount').value = 1;
-            document.getElementById('bookingTicketCount').max = movie.capacity;
-            passengerCount = 1;
-            renderPassengers(movie.price);
-            openModal('bookingModal');
         };
 
         function renderPassengers(pricePerTicket) {
@@ -1145,19 +1215,47 @@
 
         // ===== STATS =====
         async function loadStats() {
-            const users = await getUsers();
-            const movies = await getMovies();
-            const bookings = await getBookings();
-            let revenue = 0;
-            bookings.forEach(b => {
-                if (b.payment_status === 'paid') {
-                    revenue += b.total_price || 0;
-                }
-            });
-            document.getElementById('statUsers').textContent = users.length;
-            document.getElementById('statMovies').textContent = movies.length;
-            document.getElementById('statBookings').textContent = bookings.length;
-            document.getElementById('statRevenue').textContent = formatCurrency(revenue);
+            const statsContainer = document.getElementById('homeStats');
+            if (!statsContainer) return;
+            
+            // فقط برای ادمین کل نمایش داده شود
+            if (!currentUser || currentUser.role !== 'admin1') {
+                statsContainer.innerHTML = `
+                    <div style="text-align:center;padding:20px;opacity:0.5;grid-column:1/-1;">
+                        <i class="fas fa-lock" style="font-size:24px;color:#ffd700;"></i>
+                        <p style="margin-top:10px;">🔒 آمار فقط برای ادمین کل قابل مشاهده است</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const users = await getUsers();
+                const movies = await getMovies();
+                const bookings = await getBookings();
+                const attendances = await getAttendances();
+                
+                let revenue = 0;
+                bookings.forEach(b => {
+                    if (b.payment_status === 'paid') {
+                        revenue += b.total_price || 0;
+                    }
+                });
+                
+                const presentCount = attendances.filter(a => a.status === 'present').length;
+                const absentCount = attendances.filter(a => a.status === 'absent').length;
+                
+                statsContainer.innerHTML = `
+                    <div class="stat-card"><i class="fas fa-users"></i><div class="number" id="statUsers">${users.length}</div><div class="label">کاربران</div></div>
+                    <div class="stat-card"><i class="fas fa-film"></i><div class="number" id="statMovies">${movies.length}</div><div class="label">فیلم‌ها</div></div>
+                    <div class="stat-card"><i class="fas fa-check-circle"></i><div class="number" id="statBookings">${bookings.length}</div><div class="label">رزروها</div></div>
+                    <div class="stat-card"><i class="fas fa-dollar-sign"></i><div class="number" id="statRevenue">${formatCurrency(revenue)}</div><div class="label">درآمد</div></div>
+                    <div class="stat-card"><i class="fas fa-user-check"></i><div class="number">${presentCount}</div><div class="label">حاضر</div></div>
+                    <div class="stat-card"><i class="fas fa-user-slash"></i><div class="number">${absentCount}</div><div class="label">غایب</div></div>
+                `;
+            } catch(e) {
+                console.error('خطا در بارگذاری آمار:', e);
+            }
         }
 
         // ===== ADMIN =====
@@ -1180,10 +1278,24 @@
                 renderAddMovieForm(container);
             } else if (tab === 'report') {
                 renderReport(container);
+            } else if (tab === 'attendance') {
+                await renderAdminAttendance(container);
             }
         }
 
         async function renderAdminUsers(container) {
+            // فقط ادمین کل می‌تواند کاربران را مدیریت کند
+            if (currentRole !== 'admin1') {
+                container.innerHTML = `
+                    <div style="text-align:center;padding:40px;opacity:0.6;">
+                        <i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i>
+                        <p>🔒 مدیریت کاربران فقط برای ادمین کل قابل دسترسی است</p>
+                        <p style="font-size:13px;margin-top:10px;">ادمین دوم فقط می‌تواند رزروها و حضور و غیاب را مدیریت کند</p>
+                    </div>
+                `;
+                return;
+            }
+            
             const users = await getUsers();
             let html =
                 `<div class="glass-title" style="font-size:18px;">👥 کاربران (${users.length})</div>
@@ -1205,15 +1317,12 @@
                             <td>
                                 <div class="table-actions">
                                     <button class="btn btn-warning btn-xs" onclick="editUser('${u.id}')"><i class="fas fa-edit"></i></button>
-                                    ${!isSelf && currentRole === 'admin1' ? `
+                                    ${!isSelf ? `
                                         <button class="btn btn-success btn-xs" onclick="promoteUser('${u.id}')"><i class="fas fa-arrow-up"></i></button>
-                                        <button class="btn btn-danger btn-xs" onclick="demoteUser('${u.id}')"><i class="fas fa-arrow-down"></i></button>
-                                        <button class="btn btn-danger btn-xs" onclick="deleteUserAccount('${u.id}')"><i class="fas fa-trash"></i></button>
+                                        ${u.role !== 'admin1' ? `<button class="btn btn-danger btn-xs" onclick="demoteUser('${u.id}')"><i class="fas fa-arrow-down"></i></button>` : ''}
+                                        ${u.role !== 'admin1' ? `<button class="btn btn-danger btn-xs" onclick="deleteUserAccount('${u.id}')"><i class="fas fa-trash"></i></button>` : ''}
                                     ` : ''}
-                                    ${!isSelf && currentRole === 'admin2' && u.role === 'user' ? `
-                                        <button class="btn btn-success btn-xs" onclick="promoteUser('${u.id}')"><i class="fas fa-arrow-up"></i></button>
-                                        <button class="btn btn-danger btn-xs" onclick="deleteUserAccount('${u.id}')"><i class="fas fa-trash"></i></button>
-                                    ` : ''}
+                                    ${isSelf ? `<span style="opacity:0.4;font-size:12px;">خودتان</span>` : ''}
                                 </div>
                             </td>
                         </tr>
@@ -1279,6 +1388,12 @@
             const user = users.find(u => String(u.id) === String(userId));
             if (!user) { showToast('❌ کاربر یافت نشد', 'error'); return; }
 
+            // جلوگیری از ارتقا به admin1 توسط غیر admin1
+            if (currentRole !== 'admin1') {
+                showToast('❌ فقط ادمین کل می‌تواند به ادمین کل ارتقا دهد', 'error');
+                return;
+            }
+
             let newRole = 'admin2';
             if (user.role === 'admin2') newRole = 'admin1';
             if (user.role === 'admin1') {
@@ -1299,12 +1414,20 @@
             const users = await getUsers();
             const user = users.find(u => String(u.id) === String(userId));
             if (!user) { showToast('❌ کاربر یافت نشد', 'error'); return; }
-            if (user.role === 'user') {
-                showToast('⚠️ این کاربر قبلاً عادی است', 'info');
+            
+            // جلوگیری از عزل ادمین کل توسط دیگران
+            if (user.role === 'admin1' && String(user.id) !== String(currentUser.id)) {
+                showToast('❌ نمی‌توانید ادمین کل را عزل کنید! فقط خودش می‌تواند.', 'error');
                 return;
             }
+            
             if (String(user.id) === String(currentUser.id)) {
                 showToast('❌ نمی‌توانید خودتان را عزل کنید', 'error');
+                return;
+            }
+            
+            if (user.role === 'user') {
+                showToast('⚠️ این کاربر قبلاً عادی است', 'info');
                 return;
             }
 
@@ -1325,6 +1448,10 @@
                 showToast('❌ نمی‌توانید خودتان را حذف کنید', 'error');
                 return;
             }
+            if (user.role === 'admin1') {
+                showToast('❌ نمی‌توانید ادمین کل را حذف کنید', 'error');
+                return;
+            }
             if (!confirm(`آیا از حذف کاربر "${user.first_name} ${user.last_name}" اطمینان دارید؟`)) return;
 
             try {
@@ -1337,16 +1464,24 @@
         };
 
         async function renderAdminMovies(container) {
+            // فقط ادمین کل می‌تواند فیلم‌ها را مدیریت کند
+            if (currentRole !== 'admin1') {
+                container.innerHTML = `
+                    <div style="text-align:center;padding:40px;opacity:0.6;">
+                        <i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i>
+                        <p>🔒 مدیریت فیلم‌ها فقط برای ادمین کل قابل دسترسی است</p>
+                        <p style="font-size:13px;margin-top:10px;">ادمین دوم فقط می‌تواند رزروها و حضور و غیاب را مدیریت کند</p>
+                    </div>
+                `;
+                return;
+            }
+            
             const movies = await getMovies();
             let html =
                 `<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها (${movies.length})</div>
                     <div class="table-wrap"><table>
-                    <thead><tr><th>نام</th><th>تاریخ اکران (شمسی)</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th>`;
-
-            if (currentRole === 'admin1') {
-                html += `<th>عملیات</th>`;
-            }
-            html += `</tr></thead><tbody>`;
+                    <thead><tr><th>نام</th><th>تاریخ اکران (شمسی)</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th>
+                    <th>عملیات</th></tr></thead><tbody>`;
 
             for (const m of movies) {
                 const persianDate = formatDate(m.release_date);
@@ -1355,16 +1490,14 @@
                         <td>${persianDate}</td>
                         <td>${m.capacity}</td>
                         <td>${formatCurrency(m.price)} تومان</td>
-                        <td>${m.status}</td>`;
-                if (currentRole === 'admin1') {
-                    html += `<td>
+                        <td>${m.status}</td>
+                        <td>
                             <div class="table-actions">
                                 <button class="btn btn-warning btn-xs" onclick="editMovie('${m.id}')"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-danger btn-xs" onclick="deleteMovieAdmin('${m.id}')"><i class="fas fa-trash"></i></button>
                             </div>
-                        </td>`;
-                }
-                html += `</tr>`;
+                        </td>
+                    </tr>`;
             }
             html += '</tbody></table></div>';
             container.innerHTML = html;
@@ -1481,7 +1614,6 @@
                     return;
                 }
 
-                // تبدیل تاریخ شمسی به میلادی
                 const gregorianDate = jalaliToGregorian(year, month, day);
                 const release_date = gregorianDate.toISOString().split('T')[0];
 
@@ -1492,7 +1624,6 @@
                     loadMovies('homeMovies', 'all');
                     loadMovies('moviesList', currentFilter);
                     loadStats();
-                    // پاک کردن فرم
                     document.getElementById('addMovieForm').reset();
                 } catch (e) {
                     showToast('❌ خطا: ' + e.message, 'error');
@@ -1500,12 +1631,15 @@
             });
         }
 
+        // ===== ADMIN BOOKINGS =====
         async function renderAdminBookings(container) {
             const bookings = await getBookings();
+            const attendances = await getAttendances();
+            
             let html =
                 `<div class="glass-title" style="font-size:18px;">🎟️ رزروها (${bookings.length})</div>
                     <div class="table-wrap"><table>
-                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ اکران (شمسی)</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>عملیات</th></tr></thead><tbody>`;
+                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ اکران (شمسی)</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>حضور</th><th>عملیات</th></tr></thead><tbody>`;
 
             for (const b of bookings) {
                 let userName = '-';
@@ -1525,6 +1659,27 @@
                 const passengers = b.passengers || [];
                 const passengerNames = passengers.map(p => p.full_name).join('، ') || '-';
                 const totalPrice = b.total_price || (b.ticket_count * (b.movies?.price || 0));
+                
+                // بررسی وضعیت حضور
+                const attendance = attendances.find(a => a.booking_id === b.id);
+                let attendanceStatus = '-';
+                let attendanceIcon = '';
+                if (attendance) {
+                    if (attendance.status === 'present') {
+                        attendanceStatus = '✅ حاضر';
+                        attendanceIcon = '🟢';
+                    } else if (attendance.status === 'absent') {
+                        attendanceStatus = '❌ غایب';
+                        attendanceIcon = '🔴';
+                    } else if (attendance.status === 'late') {
+                        attendanceStatus = '⏰ دیر';
+                        attendanceIcon = '🟡';
+                    }
+                } else {
+                    attendanceStatus = '⏳ ثبت نشده';
+                }
+
+                const isCheckedIn = attendance !== null;
 
                 html += `<tr>
                         <td>${userName}</td>
@@ -1536,10 +1691,17 @@
                         <td style="color:#ffd700;">${b.booking_code}</td>
                         <td>${b.status === 'active' ? '✅ فعال' : b.status === 'cancelled' ? '❌ لغو شده' : '⏰ منقضی'}</td>
                         <td>${b.payment_status === 'paid' ? '✅ پرداخت شده' : b.payment_status === 'pending' ? '⏳ در انتظار' : '❌ پرداخت نشده'}</td>
+                        <td>${attendanceStatus}</td>
                         <td>
                             <div class="table-actions">
                                 ${b.status === 'active' ? `<button class="btn btn-danger btn-xs" onclick="cancelBookingAdmin('${b.id}')"><i class="fas fa-times"></i> لغو</button>` : ''}
                                 ${b.payment_status === 'unpaid' ? `<button class="btn btn-success btn-xs" onclick="markPaymentPaid('${b.id}')"><i class="fas fa-check"></i> پرداخت</button>` : ''}
+                                ${b.status === 'active' && b.payment_status === 'paid' && !isCheckedIn ? `
+                                    <button class="btn btn-success btn-xs" onclick="checkIn('${b.id}')"><i class="fas fa-user-check"></i> ثبت حضور</button>
+                                ` : ''}
+                                ${isCheckedIn ? `
+                                    <button class="btn btn-warning btn-xs" onclick="checkOut('${attendance.id}')"><i class="fas fa-user-times"></i> خروج</button>
+                                ` : ''}
                             </div>
                         </td>
                     </tr>`;
@@ -1574,12 +1736,111 @@
             }
         };
 
+        // ===== ATTENDANCE =====
+        window.checkIn = async function(bookingId) {
+            try {
+                const bookings = await getBookings();
+                const booking = bookings.find(b => b.id === bookingId);
+                if (!booking) {
+                    showToast('❌ رزرو یافت نشد', 'error');
+                    return;
+                }
+                
+                // بررسی اینکه آیا قبلاً ثبت حضور شده است
+                const attendances = await getAttendances();
+                const existing = attendances.find(a => a.booking_id === bookingId);
+                if (existing) {
+                    showToast('⚠️ این رزرو قبلاً ثبت حضور شده است', 'info');
+                    return;
+                }
+                
+                await insertAttendance({
+                    booking_id: bookingId,
+                    user_id: booking.user_id,
+                    movie_id: booking.movie_id,
+                    check_in_time: new Date().toISOString(),
+                    status: 'present',
+                    notes: 'ثبت حضور در سینما'
+                });
+                
+                showToast('✅ حضور ثبت شد!', 'success');
+                loadAdmin('bookings');
+                loadStats();
+            } catch(e) {
+                showToast('❌ خطا: ' + e.message, 'error');
+            }
+        };
+
+        window.checkOut = async function(attendanceId) {
+            if (!confirm('آیا از خروج این شخص اطمینان دارید؟')) return;
+            try {
+                await updateAttendance(attendanceId, {
+                    check_out_time: new Date().toISOString(),
+                    status: 'present' // همچنان حاضر است اما زمان خروج ثبت شد
+                });
+                showToast('✅ خروج ثبت شد', 'success');
+                loadAdmin('bookings');
+            } catch(e) {
+                showToast('❌ خطا: ' + e.message, 'error');
+            }
+        };
+
+        // ===== ADMIN ATTENDANCE =====
+        async function renderAdminAttendance(container) {
+            // ادمین دوم و ادمین کل می‌توانند حضور و غیاب را ببینند
+            if (currentRole !== 'admin1' && currentRole !== 'admin2') {
+                container.innerHTML = '🔒 شما دسترسی ندارید';
+                return;
+            }
+            
+            const attendances = await getAttendances();
+            let html =
+                `<div class="glass-title" style="font-size:18px;">👤 حضور و غیاب (${attendances.length})</div>
+                    <div class="table-wrap"><table>
+                    <thead><tr><th>کاربر</th><th>فیلم</th><th>زمان ورود</th><th>زمان خروج</th><th>وضعیت</th><th>توضیحات</th></tr></thead><tbody>`;
+
+            if (attendances.length === 0) {
+                html += `<tr><td colspan="6" style="text-align:center;padding:20px;opacity:0.5;">هیچ ثبت حضوری وجود ندارد</td></tr>`;
+            } else {
+                for (const a of attendances) {
+                    let userName = '-', movieName = '-';
+                    if (useMockData) {
+                        const u = mockUsers.find(mu => mu.id === a.user_id);
+                        userName = u ? u.first_name + ' ' + u.last_name : '-';
+                        const m = mockMovies.find(mm => mm.id === a.movie_id);
+                        movieName = m ? m.name : '-';
+                    } else {
+                        userName = a.users ? a.users.first_name + ' ' + a.users.last_name : '-';
+                        movieName = a.movies ? a.movies.name : '-';
+                    }
+                    const statusMap = { 'present': '✅ حاضر', 'absent': '❌ غایب', 'late': '⏰ دیر' };
+                    html += `<tr>
+                            <td>${userName}</td>
+                            <td>${movieName}</td>
+                            <td>${a.check_in_time ? formatDate(a.check_in_time) + ' ' + new Date(a.check_in_time).toLocaleTimeString('fa-IR') : '-'}</td>
+                            <td>${a.check_out_time ? formatDate(a.check_out_time) + ' ' + new Date(a.check_out_time).toLocaleTimeString('fa-IR') : '-'}</td>
+                            <td>${statusMap[a.status] || a.status}</td>
+                            <td>${a.notes || '-'}</td>
+                        </tr>`;
+                }
+            }
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        // ===== REPORT =====
         function renderReport(container) {
+            if (currentRole !== 'admin1') {
+                container.innerHTML = '🔒 فقط ادمین کل به گزارشات دسترسی دارد';
+                return;
+            }
+            
             container.innerHTML = `
                     <div class="glass-title" style="font-size:18px;">📊 گزارشات</div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
                         <button class="btn btn-primary" onclick="exportExcel()"><i class="fas fa-file-excel"></i> خروجی اکسل کاربران</button>
                         <button class="btn btn-primary" onclick="exportBookingsExcel()"><i class="fas fa-file-excel"></i> خروجی اکسل رزروها</button>
+                        <button class="btn btn-primary" onclick="exportAttendanceExcel()"><i class="fas fa-file-excel"></i> خروجی اکسل حضور و غیاب</button>
                     </div>
                     <div id="reportStats">
                         <p style="opacity:0.6;">📈 آمار کلی سیستم</p>
@@ -1588,9 +1849,13 @@
                             <div class="stat-card"><i class="fas fa-film"></i><div class="number" id="reportMovies">-</div><div class="label">فیلم‌ها</div></div>
                             <div class="stat-card"><i class="fas fa-ticket-alt"></i><div class="number" id="reportBookings">-</div><div class="label">رزروها</div></div>
                             <div class="stat-card"><i class="fas fa-dollar-sign"></i><div class="number" id="reportRevenue">-</div><div class="label">درآمد</div></div>
+                            <div class="stat-card"><i class="fas fa-user-check"></i><div class="number" id="reportPresent">-</div><div class="label">حاضر</div></div>
+                            <div class="stat-card"><i class="fas fa-user-slash"></i><div class="number" id="reportAbsent">-</div><div class="label">غایب</div></div>
                         </div>
                     </div>
                 `;
+            
+            // بارگذاری آمار گزارش
             getUsers().then(users => document.getElementById('reportUsers').textContent = users.length);
             getMovies().then(movies => document.getElementById('reportMovies').textContent = movies.length);
             getBookings().then(bookings => {
@@ -1600,6 +1865,12 @@
                     if (b.payment_status === 'paid') revenue += b.total_price || 0;
                 });
                 document.getElementById('reportRevenue').textContent = formatCurrency(revenue) + ' تومان';
+            });
+            getAttendances().then(attendances => {
+                const present = attendances.filter(a => a.status === 'present').length;
+                const absent = attendances.filter(a => a.status === 'absent').length;
+                document.getElementById('reportPresent').textContent = present;
+                document.getElementById('reportAbsent').textContent = absent;
             });
         }
 
@@ -1622,7 +1893,8 @@
 
         window.exportBookingsExcel = async function() {
             const bookings = await getBookings();
-            let csv = 'کاربر,فیلم,تاریخ اکران (شمسی),تعداد,مسافران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت\n';
+            const attendances = await getAttendances();
+            let csv = 'کاربر,فیلم,تاریخ اکران (شمسی),تعداد,مسافران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت,وضعیت حضور\n';
             for (const b of bookings) {
                 let userName = '-', movieName = '-', releaseDate = '-';
                 if (useMockData) {
@@ -1639,13 +1911,48 @@
                 const passengers = b.passengers || [];
                 const passengerNames = passengers.map(p => p.full_name).join(' - ') || '-';
                 const totalPrice = b.total_price || (b.ticket_count * (b.movies?.price || 0));
+                
+                const attendance = attendances.find(a => a.booking_id === b.id);
+                let attendanceStatus = 'ثبت نشده';
+                if (attendance) {
+                    if (attendance.status === 'present') attendanceStatus = 'حاضر';
+                    else if (attendance.status === 'absent') attendanceStatus = 'غایب';
+                    else if (attendance.status === 'late') attendanceStatus = 'دیر';
+                }
+                
                 csv +=
-                    `"${userName}","${movieName}","${releaseDate}","${b.ticket_count}","${passengerNames}","${totalPrice}","${b.booking_code}","${b.status}","${b.payment_status || 'unpaid'}"\n`;
+                    `"${userName}","${movieName}","${releaseDate}","${b.ticket_count}","${passengerNames}","${totalPrice}","${b.booking_code}","${b.status}","${b.payment_status || 'unpaid'}","${attendanceStatus}"\n`;
             }
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'گزارش_رزروها.csv';
+            link.click();
+            showToast('✅ خروجی دانلود شد', 'success');
+        };
+
+        window.exportAttendanceExcel = async function() {
+            const attendances = await getAttendances();
+            let csv = 'کاربر,فیلم,زمان ورود,زمان خروج,وضعیت,توضیحات\n';
+            for (const a of attendances) {
+                let userName = '-', movieName = '-';
+                if (useMockData) {
+                    const u = mockUsers.find(mu => mu.id === a.user_id);
+                    userName = u ? u.first_name + ' ' + u.last_name : '-';
+                    const m = mockMovies.find(mm => mm.id === a.movie_id);
+                    movieName = m ? m.name : '-';
+                } else {
+                    userName = a.users ? a.users.first_name + ' ' + a.users.last_name : '-';
+                    movieName = a.movies ? a.movies.name : '-';
+                }
+                const statusMap = { 'present': 'حاضر', 'absent': 'غایب', 'late': 'دیر' };
+                csv +=
+                    `"${userName}","${movieName}","${a.check_in_time ? new Date(a.check_in_time).toLocaleString('fa-IR') : '-'}","${a.check_out_time ? new Date(a.check_out_time).toLocaleString('fa-IR') : '-'}","${statusMap[a.status] || a.status}","${a.notes || ''}"\n`;
+            }
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'گزارش_حضور_و_غیاب.csv';
             link.click();
             showToast('✅ خروجی دانلود شد', 'success');
         };
@@ -1661,11 +1968,11 @@
                     if (page === 'home') { loadMovies('homeMovies', 'all');
                         loadStats(); } else if (page === 'movies') loadMovies('moviesList', currentFilter);
                     else if (page === 'profile' && currentUser) loadProfile();
-                    else if (page === 'admin') loadAdmin('users');
+                    else if (page === 'admin') {
+                        renderAdminTabs();
+                        loadAdmin('bookings');
+                    }
                 });
-            });
-            document.querySelectorAll('[data-tab]').forEach(el => {
-                el.addEventListener('click', function() { loadAdmin(this.dataset.tab); });
             });
         }
 
@@ -1708,7 +2015,7 @@
             console.log('🎬 سینما آماده است!');
             console.log('📌 ورود: شماره 09120000001 - رمز 123456');
             console.log('📌 ثبت‌نام: هر شماره جدید با رمز حداقل ۶ کاراکتر');
-            console.log('📅 تاریخ‌ها به صورت شمسی نمایش داده می‌شوند و در دیتابیس میلادی ذخیره می‌شوند.');
+            console.log('📅 تاریخ‌ها به صورت شمسی نمایش داده می‌شوند.');
         });
 
     })();
