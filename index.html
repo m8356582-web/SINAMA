@@ -6,6 +6,8 @@
     <title>🎬 سینما</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+    <!-- کتابخانه jalaali-js برای تبدیل دقیق تاریخ -->
+    <script src="https://cdn.jsdelivr.net/npm/jalaali-js@1.1.0/dist/jalaali-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;user-select:none}
@@ -306,66 +308,75 @@
         'use strict';
 
         // ============================================
-        // توابع تبدیل تاریخ میلادی به شمسی
+        // توابع تبدیل تاریخ با استفاده از jalaali-js
         // ============================================
         function toPersianDate(date) {
             if (!date) return '-';
-            
             const d = typeof date === 'string' ? new Date(date) : date;
             if (isNaN(d.getTime())) return '-';
             
-            const year = d.getFullYear();
-            const month = d.getMonth() + 1;
-            const day = d.getDate();
+            const gy = d.getFullYear();
+            const gm = d.getMonth() + 1;
+            const gd = d.getDate();
             
-            const gregorianToJalali = (gy, gm, gd) => {
-                const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-                let jalaliDate = {};
-                if (gy > 1600) {
-                    let jy = gy - 1600;
-                    const gy2 = gy > 1600 ? gy - 1600 : gy;
-                    let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
-                        g_d_m[gm - 1] + gd - 1;
-                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
-                        if (gm > 2) days++;
-                    }
-                    const j_days = days - 226899;
-                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
-                    const jy3 = jy2 + 1;
-                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
-                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                    const jm = jm2 - 1;
-                    jalaliDate.jy = jy3;
-                    jalaliDate.jm = jm;
-                    jalaliDate.jd = jd;
-                } else {
-                    let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
-                        g_d_m[gm - 1] + gd - 1;
-                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
-                        if (gm > 2) days++;
-                    }
-                    const j_days = days - 226899;
-                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
-                    const jy3 = jy2 + 1;
-                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
-                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                    const jm = jm2 - 1;
-                    jalaliDate.jy = jy3 - 620;
-                    jalaliDate.jm = jm;
-                    jalaliDate.jd = jd;
-                }
-                return jalaliDate;
-            };
+            // تبدیل با کتابخانه jalaali-js
+            const j = window.jalaali ? window.jalaali.toJalaali(gy, gm, gd) : null;
+            if (!j) {
+                // fallback: اگر کتابخانه بارگذاری نشد، از تابع دستی استفاده کن
+                return manualToPersian(gy, gm, gd);
+            }
             
-            const jDate = gregorianToJalali(year, month, day);
             const monthNames = [
                 'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
                 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
             ];
-            
-            return `${jDate.jd} ${monthNames[jDate.jm]} ${jDate.jy}`;
+            return `${j.jd} ${monthNames[j.jm - 1]} ${j.jy}`;
+        }
+
+        // تابع دستی برای مواقعی که کتابخانه بارگذاری نشود
+        function manualToPersian(gy, gm, gd) {
+            const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+            let jalaliDate = {};
+            if (gy > 1600) {
+                let jy = gy - 1600;
+                const gy2 = gy > 1600 ? gy - 1600 : gy;
+                let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
+                    g_d_m[gm - 1] + gd - 1;
+                if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                    if (gm > 2) days++;
+                }
+                const j_days = days - 226899;
+                const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                const jy3 = jy2 + 1;
+                const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                const jm = jm2 - 1;
+                jalaliDate.jy = jy3;
+                jalaliDate.jm = jm;
+                jalaliDate.jd = jd;
+            } else {
+                let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
+                    g_d_m[gm - 1] + gd - 1;
+                if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                    if (gm > 2) days++;
+                }
+                const j_days = days - 226899;
+                const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                const jy3 = jy2 + 1;
+                const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                const jm = jm2 - 1;
+                jalaliDate.jy = jy3 - 620;
+                jalaliDate.jm = jm;
+                jalaliDate.jd = jd;
+            }
+            const monthNames = [
+                'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+                'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+            ];
+            return `${jalaliDate.jd} ${monthNames[jalaliDate.jm]} ${jalaliDate.jy}`;
         }
 
         function toPersianDateNumeric(date) {
@@ -373,53 +384,57 @@
             const d = typeof date === 'string' ? new Date(date) : date;
             if (isNaN(d.getTime())) return '-';
             
-            const year = d.getFullYear();
-            const month = d.getMonth() + 1;
-            const day = d.getDate();
+            const gy = d.getFullYear();
+            const gm = d.getMonth() + 1;
+            const gd = d.getDate();
             
-            const gregorianToJalali = (gy, gm, gd) => {
-                const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-                let jalaliDate = {};
-                if (gy > 1600) {
-                    let jy = gy - 1600;
-                    const gy2 = gy > 1600 ? gy - 1600 : gy;
-                    let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
-                        g_d_m[gm - 1] + gd - 1;
-                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
-                        if (gm > 2) days++;
-                    }
-                    const j_days = days - 226899;
-                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
-                    const jy3 = jy2 + 1;
-                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
-                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                    const jm = jm2 - 1;
-                    jalaliDate.jy = jy3;
-                    jalaliDate.jm = jm;
-                    jalaliDate.jd = jd;
-                } else {
-                    let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
-                        g_d_m[gm - 1] + gd - 1;
-                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
-                        if (gm > 2) days++;
-                    }
-                    const j_days = days - 226899;
-                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
-                    const jy3 = jy2 + 1;
-                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
-                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
-                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
-                    const jm = jm2 - 1;
-                    jalaliDate.jy = jy3 - 620;
-                    jalaliDate.jm = jm;
-                    jalaliDate.jd = jd;
+            const j = window.jalaali ? window.jalaali.toJalaali(gy, gm, gd) : null;
+            if (!j) {
+                // fallback
+                return manualToPersianNumeric(gy, gm, gd);
+            }
+            return `${j.jy}/${String(j.jm).padStart(2, '0')}/${String(j.jd).padStart(2, '0')}`;
+        }
+
+        function manualToPersianNumeric(gy, gm, gd) {
+            const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+            let jalaliDate = {};
+            if (gy > 1600) {
+                let jy = gy - 1600;
+                const gy2 = gy > 1600 ? gy - 1600 : gy;
+                let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
+                    g_d_m[gm - 1] + gd - 1;
+                if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                    if (gm > 2) days++;
                 }
-                return jalaliDate;
-            };
-            
-            const jDate = gregorianToJalali(year, month, day);
-            return `${jDate.jy}/${String(jDate.jm).padStart(2, '0')}/${String(jDate.jd).padStart(2, '0')}`;
+                const j_days = days - 226899;
+                const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                const jy3 = jy2 + 1;
+                const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                const jm = jm2 - 1;
+                jalaliDate.jy = jy3;
+                jalaliDate.jm = jm;
+                jalaliDate.jd = jd;
+            } else {
+                let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
+                    g_d_m[gm - 1] + gd - 1;
+                if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                    if (gm > 2) days++;
+                }
+                const j_days = days - 226899;
+                const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                const jy3 = jy2 + 1;
+                const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                const jm = jm2 - 1;
+                jalaliDate.jy = jy3 - 620;
+                jalaliDate.jm = jm;
+                jalaliDate.jd = jd;
+            }
+            return `${jalaliDate.jy}/${String(jalaliDate.jm).padStart(2, '0')}/${String(jalaliDate.jd).padStart(2, '0')}`;
         }
 
         // ===== CONFIG =====
@@ -462,7 +477,7 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        // تابع فرمت تاریخ با تبدیل به شمسی
+        // تابع اصلی فرمت تاریخ (به شمسی)
         function formatDate(date) {
             return toPersianDate(date);
         }
@@ -848,10 +863,8 @@
         async function loadProfile() {
             if (!currentUser) return;
             
-            // اگر کد یکتا null بود، یک کد جدید تولید کن
             const userCode = currentUser.code || generateCode();
             if (!currentUser.code) {
-                // به‌روزرسانی کاربر با کد جدید
                 try {
                     await updateUser(currentUser.id, { code: userCode });
                     currentUser.code = userCode;
@@ -976,12 +989,14 @@
                 const statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
                 const statusClass = m.status === 'now_showing' ? '' : m.status === 'coming_soon' ? 'soon' : 'ended';
                 const isAvailable = m.status === 'now_showing' && currentUser;
+                // نمایش تاریخ شمسی
+                const persianDate = formatDate(m.release_date);
                 html += `
                         <div class="movie-card">
                             <div class="icon"><i class="fas fa-film"></i></div>
                             <h3>${m.name}</h3>
                             <div class="badge ${statusClass}">${statusMap[m.status] || m.status}</div>
-                            <p style="opacity:0.6;font-size:13px;">📅 ${formatDate(m.release_date)}</p>
+                            <p style="opacity:0.6;font-size:13px;">📅 ${persianDate}</p>
                             <p class="capacity">ظرفیت: ${m.capacity} نفر</p>
                             <div class="price">${formatCurrency(m.price)} تومان</div>
                             ${isAvailable ? `<button class="btn btn-primary btn-sm" onclick="openBooking('${m.id}')"><i class="fas fa-ticket-alt"></i> رزرو</button>` : ''}
@@ -1363,9 +1378,11 @@
             html += `</tr></thead><tbody>`;
 
             for (const m of movies) {
+                // نمایش تاریخ شمسی
+                const persianDate = formatDate(m.release_date);
                 html += `<tr>
                         <td>${m.name}</td>
-                        <td>${formatDate(m.release_date)}</td>
+                        <td>${persianDate}</td>
                         <td>${m.capacity}</td>
                         <td>${formatCurrency(m.price)} تومان</td>
                         <td>${m.status}</td>`;
@@ -1689,6 +1706,7 @@
             console.log('🎬 سینما آماده است!');
             console.log('📌 ورود: شماره 09120000001 - رمز 123456');
             console.log('📌 ثبت‌نام: هر شماره جدید با رمز حداقل ۶ کاراکتر');
+            console.log('📅 تاریخ‌ها به شمسی نمایش داده می‌شوند.');
         });
 
     })();
