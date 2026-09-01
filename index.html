@@ -305,10 +305,127 @@
     (function() {
         'use strict';
 
+        // ============================================
+        // توابع تبدیل تاریخ میلادی به شمسی
+        // ============================================
+        function toPersianDate(date) {
+            if (!date) return '-';
+            
+            const d = typeof date === 'string' ? new Date(date) : date;
+            if (isNaN(d.getTime())) return '-';
+            
+            const year = d.getFullYear();
+            const month = d.getMonth() + 1;
+            const day = d.getDate();
+            
+            // الگوریتم تبدیل میلادی به شمسی
+            const gregorianToJalali = (gy, gm, gd) => {
+                const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+                let jalaliDate = {};
+                if (gy > 1600) {
+                    let jy = gy - 1600;
+                    const gy2 = gy > 1600 ? gy - 1600 : gy;
+                    let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
+                        g_d_m[gm - 1] + gd - 1;
+                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                        if (gm > 2) days++;
+                    }
+                    const j_days = days - 226899;
+                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                    const jy3 = jy2 + 1;
+                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                    const jm = jm2 - 1;
+                    jalaliDate.jy = jy3;
+                    jalaliDate.jm = jm;
+                    jalaliDate.jd = jd;
+                } else {
+                    let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
+                        g_d_m[gm - 1] + gd - 1;
+                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                        if (gm > 2) days++;
+                    }
+                    const j_days = days - 226899;
+                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                    const jy3 = jy2 + 1;
+                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                    const jm = jm2 - 1;
+                    jalaliDate.jy = jy3 - 620;
+                    jalaliDate.jm = jm;
+                    jalaliDate.jd = jd;
+                }
+                return jalaliDate;
+            };
+            
+            const jDate = gregorianToJalali(year, month, day);
+            const monthNames = [
+                'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+                'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+            ];
+            
+            return `${jDate.jd} ${monthNames[jDate.jm]} ${jDate.jy}`;
+        }
+
+        function toPersianDateNumeric(date) {
+            if (!date) return '-';
+            const d = typeof date === 'string' ? new Date(date) : date;
+            if (isNaN(d.getTime())) return '-';
+            
+            const year = d.getFullYear();
+            const month = d.getMonth() + 1;
+            const day = d.getDate();
+            
+            const gregorianToJalali = (gy, gm, gd) => {
+                const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+                let jalaliDate = {};
+                if (gy > 1600) {
+                    let jy = gy - 1600;
+                    const gy2 = gy > 1600 ? gy - 1600 : gy;
+                    let days = (gy2 - 1) * 365 + Math.floor((gy2 - 1) / 4) - Math.floor((gy2 - 1) / 100) + Math.floor((gy2 - 1) / 400) +
+                        g_d_m[gm - 1] + gd - 1;
+                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                        if (gm > 2) days++;
+                    }
+                    const j_days = days - 226899;
+                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                    const jy3 = jy2 + 1;
+                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                    const jm = jm2 - 1;
+                    jalaliDate.jy = jy3;
+                    jalaliDate.jm = jm;
+                    jalaliDate.jd = jd;
+                } else {
+                    let days = (gy - 1) * 365 + Math.floor((gy - 1) / 4) - Math.floor((gy - 1) / 100) + Math.floor((gy - 1) / 400) +
+                        g_d_m[gm - 1] + gd - 1;
+                    if ((gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0) {
+                        if (gm > 2) days++;
+                    }
+                    const j_days = days - 226899;
+                    const jy2 = Math.floor((j_days * 4 + 1) / 146097);
+                    const jy3 = jy2 + 1;
+                    const j_days2 = j_days - Math.floor((146097 * jy2) / 4);
+                    const jm2 = Math.floor((j_days2 * 100 + 1) / 3060);
+                    const jd = j_days2 - Math.floor((3060 * jm2 - 1) / 100) + 1;
+                    const jm = jm2 - 1;
+                    jalaliDate.jy = jy3 - 620;
+                    jalaliDate.jm = jm;
+                    jalaliDate.jd = jd;
+                }
+                return jalaliDate;
+            };
+            
+            const jDate = gregorianToJalali(year, month, day);
+            return `${jDate.jy}/${String(jDate.jm).padStart(2, '0')}/${String(jDate.jd).padStart(2, '0')}`;
+        }
+
         // ===== CONFIG =====
         const SUPABASE_URL = 'https://ufwzjqnnfajgdaifqobz.supabase.co';
-        const SUPABASE_ANON_KEY =
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmd3pqcW5uZmFqZ2RhaWZxb2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MzE3NzIsImV4cCI6MjEwMzUwNzc3Mn0.vlVNwSNcUNwM7D4BAPlkx8g1_iBVsmJgnjJWvF3FVnI';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmd3pqcW5uZmFqZ2RhaWZxb2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5MzE3NzIsImV4cCI6MjEwMzUwNzc3Mn0.vlVNwSNcUNwM7D4BAPlkx8g1_iBVsmJgnjJWvF3FVnI';
 
         let supabaseClient = null;
         let currentUser = null;
@@ -346,9 +463,9 @@
             setTimeout(() => t.remove(), 4000);
         }
 
-        function formatDate(d) {
-            if (!d) return '-';
-            return new Date(d).toLocaleDateString('fa-IR');
+        // استفاده از تابع شمسی برای فرمت تاریخ
+        function formatDate(date) {
+            return toPersianDate(date);
         }
 
         function formatCurrency(n) {
@@ -488,7 +605,7 @@
         async function getBookings() {
             if (useMockData) return [...mockBookings];
             const { data } = await supabaseClient.from('bookings').select(
-                '*, users(first_name,last_name,phone), movies(name,price)').order('created_at', { ascending: false });
+                '*, users(first_name,last_name,phone), movies(name,price,release_date)').order('created_at', { ascending: false });
             return data || [];
         }
 
@@ -853,7 +970,7 @@
                             <div class="icon"><i class="fas fa-film"></i></div>
                             <h3>${m.name}</h3>
                             <div class="badge ${statusClass}">${statusMap[m.status] || m.status}</div>
-                            <p style="opacity:0.6;font-size:13px;">${formatDate(m.release_date)}</p>
+                            <p style="opacity:0.6;font-size:13px;">📅 ${formatDate(m.release_date)}</p>
                             <p class="capacity">ظرفیت: ${m.capacity} نفر</p>
                             <div class="price">${formatCurrency(m.price)} تومان</div>
                             ${isAvailable ? `<button class="btn btn-primary btn-sm" onclick="openBooking('${m.id}')"><i class="fas fa-ticket-alt"></i> رزرو</button>` : ''}
@@ -1226,7 +1343,7 @@
             let html =
                 `<div class="glass-title" style="font-size:18px;">🎬 فیلم‌ها (${movies.length})</div>
                     <div class="table-wrap"><table>
-                    <thead><tr><th>نام</th><th>تاریخ</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th>`;
+                    <thead><tr><th>نام</th><th>تاریخ اکران</th><th>ظرفیت</th><th>قیمت</th><th>وضعیت</th>`;
 
             if (currentRole === 'admin1') {
                 html += `<th>عملیات</th>`;
@@ -1357,19 +1474,22 @@
             let html =
                 `<div class="glass-title" style="font-size:18px;">🎟️ رزروها (${bookings.length})</div>
                     <div class="table-wrap"><table>
-                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>عملیات</th></tr></thead><tbody>`;
+                    <thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>عملیات</th></tr></thead><tbody>`;
 
             for (const b of bookings) {
                 let userName = '-';
                 let movieName = '-';
+                let releaseDate = '-';
                 if (useMockData) {
                     const u = mockUsers.find(mu => mu.id === b.user_id);
                     userName = u ? u.first_name + ' ' + u.last_name : '-';
                     const m = mockMovies.find(mm => mm.id === b.movie_id);
                     movieName = m ? m.name : '-';
+                    releaseDate = m ? formatDate(m.release_date) : '-';
                 } else {
                     userName = b.users ? b.users.first_name + ' ' + b.users.last_name : '-';
                     movieName = b.movies ? b.movies.name : '-';
+                    releaseDate = b.movies ? formatDate(b.movies.release_date) : '-';
                 }
                 const passengers = b.passengers || [];
                 const passengerNames = passengers.map(p => p.full_name).join('، ') || '-';
@@ -1378,6 +1498,7 @@
                 html += `<tr>
                         <td>${userName}</td>
                         <td>${movieName}</td>
+                        <td>${releaseDate}</td>
                         <td>${b.ticket_count}</td>
                         <td style="font-size:12px;">${passengerNames}</td>
                         <td>${formatCurrency(totalPrice)} تومان</td>
@@ -1469,24 +1590,25 @@
 
         window.exportBookingsExcel = async function() {
             const bookings = await getBookings();
-            let csv = 'کاربر,فیلم,تعداد,مسافران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت\n';
+            let csv = 'کاربر,فیلم,تاریخ اکران,تعداد,مسافران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت\n';
             for (const b of bookings) {
-                let userName = '-',
-                    movieName = '-';
+                let userName = '-', movieName = '-', releaseDate = '-';
                 if (useMockData) {
                     const u = mockUsers.find(mu => mu.id === b.user_id);
                     userName = u ? u.first_name + ' ' + u.last_name : '-';
                     const m = mockMovies.find(mm => mm.id === b.movie_id);
                     movieName = m ? m.name : '-';
+                    releaseDate = m ? formatDate(m.release_date) : '-';
                 } else {
                     userName = b.users ? b.users.first_name + ' ' + b.users.last_name : '-';
                     movieName = b.movies ? b.movies.name : '-';
+                    releaseDate = b.movies ? formatDate(b.movies.release_date) : '-';
                 }
                 const passengers = b.passengers || [];
                 const passengerNames = passengers.map(p => p.full_name).join(' - ') || '-';
                 const totalPrice = b.total_price || (b.ticket_count * (b.movies?.price || 0));
                 csv +=
-                    `"${userName}","${movieName}","${b.ticket_count}","${passengerNames}","${totalPrice}","${b.booking_code}","${b.status}","${b.payment_status || 'unpaid'}"\n`;
+                    `"${userName}","${movieName}","${releaseDate}","${b.ticket_count}","${passengerNames}","${totalPrice}","${b.booking_code}","${b.status}","${b.payment_status || 'unpaid'}"\n`;
             }
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
