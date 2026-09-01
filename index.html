@@ -544,7 +544,6 @@
         let currentTheme = { ...THEMES['سلطنتی'] };
 
         function applyTheme(colors) {
-            // اگر colors undefined بود، از تم پیش‌فرض استفاده کن
             if (!colors) {
                 colors = THEMES['سلطنتی'];
             }
@@ -889,7 +888,6 @@
             document.getElementById('bookingTicketCount').max = movie.capacity;
             passengerCount = 1;
             renderPassengers(movie.price);
-            updateTotalPrice(movie.price);
             openModal('bookingModal');
         };
 
@@ -921,8 +919,8 @@
             updateTotalPrice(pricePerTicket);
         }
 
-        window.addPassenger = function() {
-            const movies = getMovies();
+        window.addPassenger = async function() {
+            const movies = await getMovies();
             const movie = movies.find(m => m.id === selectedMovieId);
             if (movie) {
                 const currentCount = parseInt(document.getElementById('bookingTicketCount').value) || 1;
@@ -936,10 +934,10 @@
             }
         };
 
-        window.removePassenger = function() {
+        window.removePassenger = async function() {
             if (passengerCount > 1) {
                 passengerCount--;
-                const movies = getMovies();
+                const movies = await getMovies();
                 const movie = movies.find(m => m.id === selectedMovieId);
                 document.getElementById('bookingTicketCount').value = passengerCount;
                 if (movie) renderPassengers(movie.price);
@@ -948,14 +946,14 @@
             }
         };
 
-        function updateTotalPrice(pricePerTicket) {
+        async function updateTotalPrice(pricePerTicket) {
             const count = parseInt(document.getElementById('bookingTicketCount').value) || 1;
             const total = count * pricePerTicket;
             document.getElementById('bookingTotalPrice').value = formatCurrency(total) + ' تومان';
         }
 
-        document.getElementById('bookingTicketCount').addEventListener('change', function() {
-            const movies = getMovies();
+        document.getElementById('bookingTicketCount').addEventListener('change', async function() {
+            const movies = await getMovies();
             const movie = movies.find(m => m.id === selectedMovieId);
             if (movie) {
                 let val = parseInt(this.value) || 1;
@@ -1529,7 +1527,6 @@
             initAuth();
             initNav();
             renderThemePresets();
-            // اعمال تم پیش‌فرض با بررسی undefined
             applyTheme(THEMES['سلطنتی'] || { background: 'linear-gradient(135deg, #0a1628, #1a2a4a, #0d1b2a)', primary: '#1a4a8a',
                 accent: '#ffd700', text: '#e0e8f0' });
 
