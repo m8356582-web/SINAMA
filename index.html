@@ -62,7 +62,7 @@
         .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
         .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);z-index:9998;display:none;justify-content:center;align-items:center;padding:20px}
         .modal-overlay.active{display:flex}
-        .modal{background:rgba(10,22,40,.97);backdrop-filter:blur(30px);border-radius:30px;padding:35px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid rgba(255,215,0,.15);box-shadow:0 30px 80px rgba(0,0,0,.6);position:relative}
+        .modal{background:rgba(10,22,40,.97);backdrop-filter:blur(30px);border-radius:30px;padding:35px;max-width:550px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid rgba(255,215,0,.15);box-shadow:0 30px 80px rgba(0,0,0,.6);position:relative}
         .modal h2{text-align:center;margin-bottom:25px;color:#ffd700;font-size:24px}
         .modal .btn{width:100%;justify-content:center;margin-top:10px}
         .modal .close-btn{position:absolute;top:15px;left:20px;background:none;border:none;color:rgba(255,255,255,.4);font-size:24px;cursor:pointer;transition:.3s}
@@ -98,6 +98,12 @@
         footer i{color:#ffd700}
         .receipt-preview{max-width:100px;max-height:100px;border-radius:8px;cursor:pointer;transition:.3s}
         .receipt-preview:hover{transform:scale(1.1);box-shadow:0 4px 20px rgba(255,215,0,.3)}
+        .card-box{background:rgba(255,215,0,.05);border-radius:12px;padding:12px;border:1px solid rgba(255,215,0,.1);text-align:center}
+        .card-box label{color:#ffd700;display:block;margin-bottom:5px}
+        .card-box p{font-size:18px;font-weight:700;color:#ffd700;direction:ltr}
+        .perm-checkbox{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;cursor:pointer}
+        .perm-checkbox:hover{background:rgba(255,255,255,.06)}
+        .perm-checkbox input[type="checkbox"]{width:18px;height:18px;cursor:pointer;accent-color:#ffd700}
         @media(max-width:768px){header .container{flex-direction:column;gap:8px}.nav-links{justify-content:center}.movie-grid{grid-template-columns:1fr 1fr}.stats-row{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}}
         @media(max-width:480px){.movie-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr}.btn{padding:8px 16px;font-size:12px}}
     </style>
@@ -120,6 +126,7 @@
     </div>
 </header>
 
+<!-- Login Modal -->
 <div class="modal-overlay" id="loginModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('loginModal')"><i class="fas fa-times"></i></button>
@@ -133,6 +140,7 @@
     </div>
 </div>
 
+<!-- Register Modal -->
 <div class="modal-overlay" id="registerModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('registerModal')"><i class="fas fa-times"></i></button>
@@ -153,6 +161,7 @@
     </div>
 </div>
 
+<!-- Edit Profile Modal -->
 <div class="modal-overlay" id="editProfileModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('editProfileModal')"><i class="fas fa-times"></i></button>
@@ -172,6 +181,7 @@
     </div>
 </div>
 
+<!-- Booking Modal -->
 <div class="modal-overlay" id="bookingModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('bookingModal')"><i class="fas fa-times"></i></button>
@@ -184,13 +194,20 @@
             </div>
             <div id="passengersContainer"></div>
             <div class="passenger-actions">
-                <button type="button" class="btn btn-glass btn-sm" onclick="addPassenger()"><i class="fas fa-plus"></i> افزودن مسافر</button>
-                <button type="button" class="btn btn-glass btn-sm" onclick="removePassenger()"><i class="fas fa-minus"></i> حذف مسافر</button>
+                <button type="button" class="btn btn-glass btn-sm" onclick="addPassenger()"><i class="fas fa-plus"></i> افزودن تماشاگر</button>
+                <button type="button" class="btn btn-glass btn-sm" onclick="removePassenger()"><i class="fas fa-minus"></i> حذف تماشاگر</button>
             </div>
             <div class="form-group" style="margin-top:15px;">
                 <label>💰 قیمت کل</label>
                 <input type="text" id="bookingTotalPrice" disabled style="opacity:.7;font-size:18px;font-weight:700;color:#ffd700;">
             </div>
+            <!-- شماره کارت -->
+            <div class="form-group card-box">
+                <label>💳 شماره کارت واریز</label>
+                <p id="cardNumberDisplay" style="font-size:18px;font-weight:700;color:#ffd700;direction:ltr;">در حال بارگذاری...</p>
+                <small style="display:block;margin-top:5px;opacity:0.5;">لطفاً به این شماره کارت واریز کنید</small>
+            </div>
+            <!-- آپلود رسید -->
             <div class="form-group">
                 <label>📎 تصویر رسید واریزی</label>
                 <input type="file" id="receiptImage" accept="image/*" required>
@@ -205,6 +222,7 @@
     </div>
 </div>
 
+<!-- Edit User Modal -->
 <div class="modal-overlay" id="editUserModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('editUserModal')"><i class="fas fa-times"></i></button>
@@ -231,8 +249,42 @@
     </div>
 </div>
 
+<!-- Permissions Modal (برای ویرایش سطح دسترسی ادمین دوم) -->
+<div class="modal-overlay" id="permissionsModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('permissionsModal')"><i class="fas fa-times"></i></button>
+        <h2>🔐 سطح دسترسی</h2>
+        <form id="permissionsForm">
+            <input type="hidden" id="permUserId">
+            <div style="margin-bottom:15px;">
+                <label class="perm-checkbox">
+                    <input type="checkbox" id="permCanUsers"> مدیریت کاربران
+                </label>
+                <label class="perm-checkbox">
+                    <input type="checkbox" id="permCanMovies"> مدیریت فیلم‌ها
+                </label>
+                <label class="perm-checkbox">
+                    <input type="checkbox" id="permCanBookings"> مدیریت رزروها
+                </label>
+                <label class="perm-checkbox">
+                    <input type="checkbox" id="permCanReports"> مشاهده گزارشات
+                </label>
+                <label class="perm-checkbox">
+                    <input type="checkbox" id="permCanAttendance"> مدیریت حضور و غیاب
+                </label>
+            </div>
+            <div class="form-group">
+                <label>💳 شماره کارت (برای نمایش به کاربران)</label>
+                <input type="text" id="permCardNumber" placeholder="مثلا 6037-9912-3456-7890">
+            </div>
+            <button type="submit" class="btn btn-warning">💾 ذخیره سطح دسترسی</button>
+        </form>
+    </div>
+</div>
+
 <main>
     <div class="container">
+        <!-- HOME -->
         <div class="page active" id="page-home">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-ticket-alt"></i> به سینما خوش آمدید</div>
@@ -245,6 +297,7 @@
             </div>
         </div>
 
+        <!-- MOVIES -->
         <div class="page" id="page-movies">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-list"></i> همه فیلم‌ها</div>
@@ -258,6 +311,7 @@
             </div>
         </div>
 
+        <!-- PROFILE -->
         <div class="page" id="page-profile">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-user-circle"></i> پروفایل من</div>
@@ -268,6 +322,7 @@
             </div>
         </div>
 
+        <!-- ADMIN -->
         <div class="page" id="page-admin">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-users-cog"></i> پنل مدیریت</div>
@@ -276,6 +331,7 @@
             </div>
         </div>
 
+        <!-- SETTINGS -->
         <div class="page" id="page-settings">
             <div class="glass">
                 <div class="glass-title"><i class="fas fa-palette"></i> تغییر تم</div>
@@ -311,7 +367,7 @@
     let passengerCount = 1;
 
     const mockUsers = [
-        { id: '1', phone: '09120000001', first_name: 'علی', last_name: 'رضایی', father_name: 'محمد', role: 'admin1', code: 'SINA-1001', password: '123456' },
+        { id: '1', phone: '09120000001', first_name: 'علی', last_name: 'رضایی', father_name: 'محمد', role: 'admin1', code: 'SINA-1001', password: '123456', card_number: '6037-9912-3456-7890', can_manage_users: true, can_manage_movies: true, can_manage_bookings: true, can_view_reports: true, can_manage_attendance: true },
         { id: '2', phone: '09123456789', first_name: 'مریم', last_name: 'احمدی', father_name: 'حسین', role: 'user', code: 'SINA-1002', password: '123456' }
     ];
     const mockMovies = [
@@ -631,6 +687,20 @@
         return result;
     }
 
+    // ===== CARD NUMBER =====
+    async function getCardNumber() {
+        try {
+            var users = await getUsers();
+            var admin = users.find(function(u) { return u.role === 'admin1'; });
+            return admin && admin.card_number ? admin.card_number : 'شماره کارت ثبت نشده است';
+        } catch(e) {
+            return 'شماره کارت ثبت نشده است';
+        }
+    }
+
+    // ============================================
+    // THEMES
+    // ============================================
     var THEMES = {
         'سلطنتی': { background: 'linear-gradient(135deg, #0a1628, #1a2a4a, #0d1b2a)', primary: '#1a4a8a', accent: '#ffd700', text: '#e0e8f0' },
         'شب آبی': { background: 'linear-gradient(135deg, #0c0c1e, #1a1a3e, #0d0d2b)', primary: '#2a5a9a', accent: '#ffd700', text: '#d0d8e8' },
@@ -694,6 +764,9 @@
         });
     }
 
+    // ============================================
+    // AUTH
+    // ============================================
     function initAuth() {
         var saved = localStorage.getItem('cinema_user');
         if (saved) {
@@ -835,6 +908,9 @@
         toast('👋 خارج شدید', 'info');
     }
 
+    // ============================================
+    // PROFILE
+    // ============================================
     async function loadProfile() {
         if (!user) return;
         var code = user.code || generateCode();
@@ -906,7 +982,7 @@
             container.innerHTML = '<p style="opacity:0.5;">🎫 هیچ رزروی ندارید</p>';
             return;
         }
-        var html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th></tr></thead><tbody>';
+        var html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>تماشاگران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th></tr></thead><tbody>';
         for (var i = 0; i < myBookings.length; i++) {
             var b = myBookings[i];
             var movieName = '-';
@@ -929,6 +1005,9 @@
         container.innerHTML = html;
     }
 
+    // ============================================
+    // MOVIES
+    // ============================================
     async function loadMovies(containerId, filterType) {
         filterType = filterType || 'all';
         var container = document.getElementById(containerId);
@@ -963,6 +1042,9 @@
         loadMovies('moviesList', filterType);
     };
 
+    // ============================================
+    // BOOKING
+    // ============================================
     window.openBooking = async function(movieId) {
         if (!user) {
             toast('⚠️ لطفاً وارد شوید', 'error');
@@ -982,6 +1064,9 @@
             document.getElementById('bookingTicketCount').max = movie.capacity;
             passengerCount = 1;
             renderPassengers(movie.price);
+            // نمایش شماره کارت
+            var cardNumber = await getCardNumber();
+            document.getElementById('cardNumberDisplay').textContent = cardNumber;
             openModal('bookingModal');
         } catch(e) {
             toast('❌ خطا: ' + e.message, 'error');
@@ -992,7 +1077,7 @@
         var container = document.getElementById('passengersContainer');
         var html = '';
         for (var i = 0; i < passengerCount; i++) {
-            html += '<div class="passenger-box"><div class="passenger-title">🧑 مسافر ' + (i + 1) + '</div><div class="form-row"><div class="form-group"><label>نام و نام خانوادگی</label><input type="text" class="passenger-name" placeholder="علی رضایی" required></div><div class="form-group"><label>شماره تلفن</label><input type="tel" class="passenger-phone" placeholder="09123456789" required></div></div><div class="form-group"><label>کد ملی</label><input type="text" class="passenger-national" placeholder="1234567890"></div></div>';
+            html += '<div class="passenger-box"><div class="passenger-title">🧑 تماشاگر ' + (i + 1) + '</div><div class="form-row"><div class="form-group"><label>نام و نام خانوادگی</label><input type="text" class="passenger-name" placeholder="علی رضایی" required></div><div class="form-group"><label>شماره تلفن</label><input type="tel" class="passenger-phone" placeholder="09123456789" required></div></div><div class="form-group"><label>کد ملی</label><input type="text" class="passenger-national" placeholder="1234567890"></div></div>';
         }
         container.innerHTML = html;
         updateTotalPrice(price);
@@ -1021,7 +1106,7 @@
             document.getElementById('bookingTicketCount').value = passengerCount;
             if (movie) renderPassengers(movie.price);
         } else {
-            toast('❌ حداقل یک مسافر باید باشد', 'error');
+            toast('❌ حداقل یک تماشاگر باید باشد', 'error');
         }
     };
 
@@ -1068,7 +1153,7 @@
             var phone = box.querySelector('.passenger-phone').value.trim();
             var national = box.querySelector('.passenger-national').value.trim() || null;
             if (!name || !phone) {
-                toast('❌ اطلاعات مسافر ' + (idx + 1) + ' کامل نیست', 'error');
+                toast('❌ اطلاعات تماشاگر ' + (idx + 1) + ' کامل نیست', 'error');
                 valid = false;
                 return;
             }
@@ -1098,6 +1183,9 @@
         }
     });
 
+    // ============================================
+    // STATS
+    // ============================================
     async function loadStats() {
         var container = document.getElementById('homeStats');
         if (!container) return;
@@ -1127,6 +1215,9 @@
         } catch(e) {}
     }
 
+    // ============================================
+    // ADMIN
+    // ============================================
     async function loadAdmin(tab) {
         var container = document.getElementById('adminContent');
         if (!user || (role !== 'admin1' && role !== 'admin2')) {
@@ -1142,6 +1233,9 @@
         else if (tab === 'attendance') await renderAttendance(container);
     }
 
+    // ============================================
+    // ADMIN USERS
+    // ============================================
     async function renderUsers(container) {
         if (role !== 'admin1') {
             container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;"><i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i><p>🔒 مدیریت کاربران فقط برای ادمین کل قابل دسترسی است</p></div>';
@@ -1155,7 +1249,11 @@
             var l = u.role === 'admin1' ? '🔓 کامل' : u.role === 'admin2' ? '🔓 محدود' : '🔒 عادی';
             var self = String(u.id) === String(user.id);
             var code = u.code || generateCode();
-            html += '<tr><td>' + u.first_name + ' ' + u.last_name + '</td><td>' + u.phone + '</td><td style="color:#ffd700;">' + code + '</td><td>' + r + '</td><td>' + l + '</td><td><div class="table-actions"><button class="btn btn-warning btn-xs" onclick="editUser(\'' + u.id + '\')"><i class="fas fa-edit"></i></button>';
+            html += '<tr><td>' + u.first_name + ' ' + u.last_name + '</td><td>' + u.phone + '</td><td style="color:#ffd700;">' + code + '</td><td>' + r + '</td><td>' + l + '</td><td><div class="table-actions">';
+            html += '<button class="btn btn-warning btn-xs" onclick="editUser(\'' + u.id + '\')"><i class="fas fa-edit"></i></button>';
+            if (u.role === 'admin2' && !self) {
+                html += '<button class="btn btn-info btn-xs" onclick="editPermissions(\'' + u.id + '\')"><i class="fas fa-key"></i> دسترسی</button>';
+            }
             if (!self) {
                 html += '<button class="btn btn-success btn-xs" onclick="promoteUser(\'' + u.id + '\')"><i class="fas fa-arrow-up"></i></button>';
                 if (u.role !== 'admin1') html += '<button class="btn btn-danger btn-xs" onclick="demoteUser(\'' + u.id + '\')"><i class="fas fa-arrow-down"></i></button>';
@@ -1168,6 +1266,68 @@
         container.innerHTML = html;
     }
 
+    // ============================================
+    // EDIT PERMISSIONS (برای ادمین دوم)
+    // ============================================
+    window.editPermissions = async function(userId) {
+        if (role !== 'admin1') {
+            toast('❌ فقط ادمین کل می‌تواند سطح دسترسی را ویرایش کند', 'error');
+            return;
+        }
+        try {
+            var users = await getUsers();
+            var u = users.find(function(x) { return String(x.id) === String(userId); });
+            if (!u) { toast('❌ کاربر یافت نشد', 'error'); return; }
+            if (u.role !== 'admin2') {
+                toast('⚠️ این کاربر ادمین دوم نیست', 'info');
+                return;
+            }
+            document.getElementById('permUserId').value = userId;
+            document.getElementById('permCanUsers').checked = u.can_manage_users || false;
+            document.getElementById('permCanMovies').checked = u.can_manage_movies || false;
+            document.getElementById('permCanBookings').checked = u.can_manage_bookings || false;
+            document.getElementById('permCanReports').checked = u.can_view_reports || false;
+            document.getElementById('permCanAttendance').checked = u.can_manage_attendance || false;
+            document.getElementById('permCardNumber').value = u.card_number || '';
+            openModal('permissionsModal');
+        } catch(e) {
+            toast('❌ خطا: ' + e.message, 'error');
+        }
+    };
+
+    document.getElementById('permissionsForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (role !== 'admin1') {
+            toast('❌ فقط ادمین کل می‌تواند سطح دسترسی را ویرایش کند', 'error');
+            return;
+        }
+        var userId = document.getElementById('permUserId').value;
+        var canUsers = document.getElementById('permCanUsers').checked;
+        var canMovies = document.getElementById('permCanMovies').checked;
+        var canBookings = document.getElementById('permCanBookings').checked;
+        var canReports = document.getElementById('permCanReports').checked;
+        var canAttendance = document.getElementById('permCanAttendance').checked;
+        var cardNumber = document.getElementById('permCardNumber').value.trim();
+        try {
+            await updateUser(userId, {
+                can_manage_users: canUsers,
+                can_manage_movies: canMovies,
+                can_manage_bookings: canBookings,
+                can_view_reports: canReports,
+                can_manage_attendance: canAttendance,
+                card_number: cardNumber
+            });
+            closeModal('permissionsModal');
+            toast('✅ سطح دسترسی به‌روز شد!', 'success');
+            loadAdmin('users');
+        } catch(e) {
+            toast('❌ خطا: ' + e.message, 'error');
+        }
+    });
+
+    // ============================================
+    // USER MANAGEMENT FUNCTIONS
+    // ============================================
     window.editUser = async function(userId) {
         try {
             var users = await getUsers();
@@ -1228,7 +1388,7 @@
         var u = users.find(function(x) { return String(x.id) === String(userId); });
         if (!u) { toast('❌ کاربر یافت نشد', 'error'); return; }
         if (u.role === 'admin1' && String(u.id) !== String(user.id)) {
-            toast('❌ نمی‌توانید ادمین کل را عزل کنید!', 'error');
+            toast('❌ نمی‌توانید ادمین کل را عزل کنید! فقط خودش می‌تواند.', 'error');
             return;
         }
         if (String(u.id) === String(user.id)) { toast('❌ نمی‌توانید خودتان را عزل کنید', 'error'); return; }
@@ -1258,6 +1418,9 @@
         }
     };
 
+    // ============================================
+    // ADMIN MOVIES
+    // ============================================
     async function renderMoviesAdmin(container) {
         if (role !== 'admin1') {
             container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;"><i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i><p>🔒 مدیریت فیلم‌ها فقط برای ادمین کل قابل دسترسی است</p></div>';
@@ -1345,10 +1508,13 @@
         });
     }
 
+    // ============================================
+    // ADMIN BOOKINGS
+    // ============================================
     async function renderBookings(container) {
         var bookings = await getBookings();
         var attendances = await getAttendances();
-        var html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها (' + bookings.length + ')</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ اکران</th><th>تعداد</th><th>مسافران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>رسید</th><th>حضور</th><th>عملیات</th></tr></thead><tbody>';
+        var html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها (' + bookings.length + ')</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ اکران</th><th>تعداد</th><th>تماشاگران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>رسید</th><th>حضور</th><th>عملیات</th></tr></thead><tbody>';
         for (var i = 0; i < bookings.length; i++) {
             var b = bookings[i];
             var userName = '-', movieName = '-', releaseDate = '-';
@@ -1411,6 +1577,9 @@
         container.innerHTML = html;
     }
 
+    // ============================================
+    // PAYMENT FUNCTIONS
+    // ============================================
     window.approvePayment = async function(bookingId) {
         if (role !== 'admin1') { toast('❌ فقط ادمین کل می‌تواند تایید کند', 'error'); return; }
         if (!confirm('آیا رسید صحیح است و تایید می‌کنید؟')) return;
@@ -1463,6 +1632,9 @@
         }
     };
 
+    // ============================================
+    // ATTENDANCE
+    // ============================================
     window.checkIn = async function(bookingId) {
         try {
             var bookings = await getBookings();
@@ -1491,6 +1663,9 @@
         }
     };
 
+    // ============================================
+    // ADMIN ATTENDANCE
+    // ============================================
     async function renderAttendance(container) {
         if (role !== 'admin1' && role !== 'admin2') {
             container.innerHTML = '🔒 شما دسترسی ندارید';
@@ -1521,6 +1696,9 @@
         container.innerHTML = html;
     }
 
+    // ============================================
+    // REPORT
+    // ============================================
     function renderReport(container) {
         if (role !== 'admin1') {
             container.innerHTML = '🔒 فقط ادمین کل به گزارشات دسترسی دارد';
@@ -1543,6 +1721,9 @@
         });
     }
 
+    // ============================================
+    // EXPORT EXCEL
+    // ============================================
     window.exportExcel = async function() {
         var users = await getUsers();
         var csv = 'نام کامل,تلفن,کد یکتا,نقش,سطح دسترسی\n';
@@ -1562,7 +1743,7 @@
     window.exportBookingsExcel = async function() {
         var bookings = await getBookings();
         var attendances = await getAttendances();
-        var csv = 'کاربر,فیلم,تاریخ اکران,تعداد,مسافران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت,وضعیت حضور\n';
+        var csv = 'کاربر,فیلم,تاریخ اکران,تعداد,تماشاگران,قیمت کل,کد رزرو,وضعیت,وضعیت پرداخت,وضعیت حضور\n';
         for (var i = 0; i < bookings.length; i++) {
             var b = bookings[i];
             var userName = '-', movieName = '-', releaseDate = '-';
@@ -1623,6 +1804,9 @@
         toast('✅ خروجی دانلود شد', 'success');
     };
 
+    // ============================================
+    // NAV
+    // ============================================
     function initNav() {
         document.querySelectorAll('[data-page]').forEach(function(el) {
             el.addEventListener('click', function(e) {
@@ -1668,6 +1852,4 @@
 </script>
 
 </body>
-</html>
-
-
+    </html>
