@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 :root{--gold:#ffd700;--gold-dark:#f0a500;--border:rgba(255,255,255,.07);--text:#e8eef7}
@@ -118,6 +119,15 @@ footer i{color:var(--gold);filter:drop-shadow(0 0 10px rgba(255,215,0,.5))}
 .card-settings-box .label{opacity:0.65;margin-bottom:8px;font-size:14px;font-weight:500}
 .card-settings-box .value{font-size:28px;font-weight:900;color:var(--gold);direction:ltr;font-family:monospace;letter-spacing:4px;text-shadow:0 0 30px rgba(255,215,0,.5);margin:10px 0}
 .card-settings-box .hint{opacity:0.45;font-size:12px;margin-top:8px}
+.notif-btn{position:relative;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;padding:7px 14px;border-radius:30px;cursor:pointer;transition:.3s;font-size:14px}
+.notif-btn:hover{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.3)}
+.notif-badge{position:absolute;top:-5px;right:-5px;background:#dc3545;color:white;border-radius:50%;min-width:18px;height:18px;font-size:10px;display:none;align-items:center;justify-content:center;padding:0 4px;font-weight:700;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.rating-star{font-size:32px;color:#555;cursor:pointer;transition:.2s;margin:0 3px}
+.rating-star.active{color:var(--gold);text-shadow:0 0 15px rgba(255,215,0,.6)}
+.rating-star:hover{transform:scale(1.2)}
+.review-item{background:rgba(255,255,255,.03);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,.05)}
+.revenue-bar{width:100%;background:linear-gradient(180deg,#ffd700,#f0a500);border-radius:8px 8px 0 0;min-height:5px;transition:.3s;box-shadow:0 0 20px rgba(255,215,0,.3)}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:rgba(255,255,255,.02)}
 ::-webkit-scrollbar-thumb{background:rgba(255,215,0,.25);border-radius:10px}
@@ -138,6 +148,10 @@ footer i{color:var(--gold);filter:drop-shadow(0 0 10px rgba(255,215,0,.5))}
 <a data-page="admin" id="adminLink" style="display:none;">⚙️ مدیریت</a>
 <a data-page="settings">🎨 تنظیمات</a>
 <span class="user-badge" id="userBadge"><i class="fas fa-user-circle"></i> <span id="userName">میهمان</span></span>
+<button class="notif-btn" id="notifBtn" onclick="showNotifications()" style="display:none;">
+<i class="fas fa-bell"></i>
+<span class="notif-badge" id="notifBadge">0</span>
+</button>
 <button class="btn btn-primary btn-sm" id="loginBtn">🔑 ورود</button>
 <button class="btn btn-success btn-sm" id="registerBtn">➕ ثبت‌نام</button>
 </div>
@@ -282,6 +296,49 @@ footer i{color:var(--gold);filter:drop-shadow(0 0 10px rgba(255,215,0,.5))}
 </div>
 </div>
 
+<div class="modal-overlay" id="ticketModal">
+<div class="modal" style="max-width:450px;">
+<button class="close-btn" onclick="closeModal('ticketModal')"><i class="fas fa-times"></i></button>
+<h2>🎫 بلیط سینما</h2>
+<div id="ticketContent" style="background:linear-gradient(135deg,#0a1628,#1a2a4a);border-radius:20px;padding:24px;border:2px dashed rgba(255,215,0,.4);text-align:center;">
+</div>
+<button class="btn btn-warning" onclick="printTicket()" style="margin-top:20px;">
+<i class="fas fa-print"></i> چاپ بلیط
+</button>
+<p style="font-size:12px;opacity:0.6;margin-top:15px;">
+لطفاً این بلیط را چاپ کنید و هنگام ورود به سینما تحویل دهید
+</p>
+</div>
+</div>
+
+<div class="modal-overlay" id="reviewsModal">
+<div class="modal" style="max-width:600px;">
+<button class="close-btn" onclick="closeModal('reviewsModal')"><i class="fas fa-times"></i></button>
+<h2 id="reviewsMovieTitle">نظرات و امتیازات</h2>
+<div id="reviewsList" style="max-height:400px;overflow-y:auto;margin-bottom:20px;"></div>
+<div style="border-top:1px solid rgba(255,255,255,.1);padding-top:20px;">
+<h3 style="color:#ffd700;font-size:16px;margin-bottom:15px;">✍️ نظر خود را ثبت کنید</h3>
+<div class="form-group">
+<label>⭐ امتیاز شما</label>
+<div id="ratingStars" style="font-size:32px;text-align:center;direction:ltr;cursor:pointer;">
+<span class="rating-star" data-rating="1">★</span>
+<span class="rating-star" data-rating="2">★</span>
+<span class="rating-star" data-rating="3">★</span>
+<span class="rating-star" data-rating="4">★</span>
+<span class="rating-star" data-rating="5">★</span>
+</div>
+</div>
+<div class="form-group">
+<label>💬 نظر شما</label>
+<textarea id="reviewComment" rows="3" placeholder="نظر خود را بنویسید..."></textarea>
+</div>
+<button class="btn btn-success" onclick="submitReview()" style="width:100%;">
+<i class="fas fa-paper-plane"></i> ثبت نظر
+</button>
+</div>
+</div>
+</div>
+
 <main>
 <div class="container">
 <div class="page active" id="page-home">
@@ -360,6 +417,8 @@ let mock = false;
 let selectedMovie = null;
 let filter = 'all';
 let passengerCount = 1;
+let currentReviewMovie = null;
+let currentRating = 0;
 
 const mockUsers = [
     { id: '1', phone: '09120000001', first_name: 'علی', last_name: 'رضایی', father_name: 'محمد', role: 'admin1', code: 'SINA-1001', password: '123456', card_number: '6037-9912-3456-7890', can_manage_users: true, can_manage_movies: true, can_manage_bookings: true, can_view_reports: true, can_manage_attendance: true },
@@ -372,6 +431,8 @@ const mockMovies = [
 ];
 const mockBookings = [];
 const mockAttendances = [];
+const mockReviews = [];
+const mockNotifications = [];
 
 function toast(msg, type) {
     type = type || 'info';
@@ -597,10 +658,8 @@ async function insertBooking(booking) {
                 if (!error) {
                     var { data: urlData } = supabase.storage.from('receipts').getPublicUrl(fileName);
                     receiptUrl = urlData.publicUrl;
-                } else {
-                    console.error('خطا در آپلود:', error);
                 }
-            } catch(e) { console.error('خطا در آپلود:', e); }
+            } catch(e) {}
         } else {
             receiptUrl = 'mock-receipt-' + Date.now() + '.jpg';
         }
@@ -627,12 +686,20 @@ async function insertBooking(booking) {
     }
     var { data, error } = await supabase.from('bookings').insert(bookingData).select().single();
     if (error) throw error;
+    
+    if (data) {
+        try {
+            var users = await getUsers();
+            var admin = users.find(function(u) { return u.role === 'admin1'; });
+            if (admin) {
+                await createNotification(admin.id, '🎫 رزرو جدید', 'یک رزرو جدید ثبت شد', 'booking', 'bookings');
+            }
+        } catch(e) {}
+    }
+    
     return data;
 }
 
-// ============================================
-// updateBooking - نسخه اصلاح‌شده (حذف فیلدهای undefined)
-// ============================================
 async function updateBooking(id, data) {
     if (mock) {
         var idx = mockBookings.findIndex(function(b) { return b.id === id; });
@@ -640,21 +707,13 @@ async function updateBooking(id, data) {
         Object.assign(mockBookings[idx], data);
         return mockBookings[idx];
     }
-    
     var cleanData = {};
     for (var key in data) {
         if (data[key] !== undefined && data[key] !== null) {
             cleanData[key] = data[key];
         }
     }
-    
-    var { data: result, error } = await supabase
-        .from('bookings')
-        .update(cleanData)
-        .eq('id', id)
-        .select()
-        .single();
-    
+    var { data: result, error } = await supabase.from('bookings').update(cleanData).eq('id', id).select().single();
     if (error) throw error;
     return result;
 }
@@ -698,6 +757,51 @@ async function updateAttendance(id, data) {
     var { data: result, error } = await supabase.from('attendances').update(data).eq('id', id).select().single();
     if (error) throw error;
     return result;
+}
+
+async function getReviews(movieId) {
+    if (mock) return mockReviews.filter(function(r) { return r.movie_id === movieId; });
+    var { data } = await supabase.from('reviews').select('*').eq('movie_id', movieId).order('created_at', { ascending: false });
+    return data || [];
+}
+
+async function insertReview(review) {
+    if (mock) {
+        var newReview = { id: 'r' + (mockReviews.length + 1), created_at: new Date().toISOString() };
+        Object.assign(newReview, review);
+        mockReviews.push(newReview);
+        return newReview;
+    }
+    var { data, error } = await supabase.from('reviews').insert(review).select().single();
+    if (error) throw error;
+    return data;
+}
+
+async function getNotifications(userId) {
+    if (mock) return mockNotifications.filter(function(n) { return n.user_id === userId && !n.is_read; });
+    var { data } = await supabase.from('notifications').select('*').eq('user_id', userId).eq('is_read', false).order('created_at', { ascending: false });
+    return data || [];
+}
+
+async function createNotification(userId, title, message, type, link) {
+    try {
+        if (mock) {
+            mockNotifications.push({ id: 'n' + (mockNotifications.length + 1), user_id: userId, title: title, message: message, type: type, link: link, is_read: false, created_at: new Date().toISOString() });
+            return;
+        }
+        await supabase.from('notifications').insert({ user_id: userId, title: title, message: message, type: type || 'info', link: link || null, is_read: false });
+    } catch(e) {}
+}
+
+async function markNotificationRead(id) {
+    try {
+        if (mock) {
+            var n = mockNotifications.find(function(x) { return x.id === id; });
+            if (n) n.is_read = true;
+            return;
+        }
+        await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    } catch(e) {}
 }
 
 async function getCardNumber() {
@@ -823,6 +927,7 @@ function initAuth() {
         loadData();
         closeModal('loginModal');
         toast('✅ خوش آمدید ' + user.first_name + '!', 'success');
+        updateNotifBadge();
     });
 
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
@@ -855,6 +960,7 @@ function updateUI() {
     var registerBtn = document.getElementById('registerBtn');
     var profileLink = document.getElementById('profileLink');
     var adminLink = document.getElementById('adminLink');
+    var notifBtn = document.getElementById('notifBtn');
     if (user) {
         nameEl.textContent = user.first_name + ' ' + user.last_name;
         loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> خروج';
@@ -862,12 +968,14 @@ function updateUI() {
         registerBtn.style.display = 'none';
         profileLink.style.display = 'inline';
         adminLink.style.display = (role === 'admin1' || role === 'admin2') ? 'inline' : 'none';
+        if (notifBtn) notifBtn.style.display = 'inline-flex';
         loadProfile();
         if (role === 'admin1' || role === 'admin2') {
             renderAdminTabs();
             loadAdmin('bookings');
         }
         loadStats();
+        updateNotifBadge();
     } else {
         nameEl.textContent = 'میهمان';
         loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ورود';
@@ -876,6 +984,7 @@ function updateUI() {
         registerBtn.className = 'btn btn-success btn-sm';
         profileLink.style.display = 'none';
         adminLink.style.display = 'none';
+        if (notifBtn) notifBtn.style.display = 'none';
         document.getElementById('profileInfo').innerHTML = 'لطفاً وارد شوید';
         document.getElementById('myBookings').innerHTML = '';
         var statsContainer = document.getElementById('homeStats');
@@ -884,6 +993,44 @@ function updateUI() {
         }
     }
 }
+
+async function updateNotifBadge() {
+    if (!user) {
+        var badge = document.getElementById('notifBadge');
+        if (badge) badge.style.display = 'none';
+        return;
+    }
+    try {
+        var notifs = await getNotifications(user.id);
+        var badge = document.getElementById('notifBadge');
+        if (badge) {
+            if (notifs.length > 0) {
+                badge.textContent = notifs.length;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch(e) {}
+}
+
+window.showNotifications = async function() {
+    if (!user) { toast('⚠️ لطفاً وارد شوید', 'error'); return; }
+    var notifs = await getNotifications(user.id);
+    if (notifs.length === 0) {
+        toast('🔔 اعلان جدیدی ندارید', 'info');
+        return;
+    }
+    var msg = '🔔 ' + notifs.length + ' اعلان جدید:\n\n';
+    notifs.slice(0, 5).forEach(function(n) {
+        msg += '• ' + n.title + ': ' + n.message + '\n';
+    });
+    alert(msg);
+    for (var i = 0; i < notifs.length; i++) {
+        await markNotificationRead(notifs[i].id);
+    }
+    updateNotifBadge();
+};
 
 function renderAdminTabs() {
     var container = document.getElementById('adminTabs');
@@ -895,6 +1042,7 @@ function renderAdminTabs() {
         html += '<button class="btn btn-primary btn-sm" data-tab="addMovie"><i class="fas fa-plus"></i> افزودن فیلم</button>';
         html += '<button class="btn btn-primary btn-sm" data-tab="report"><i class="fas fa-chart-bar"></i> گزارش</button>';
         html += '<button class="btn btn-warning btn-sm" data-tab="card"><i class="fas fa-credit-card"></i> شماره کارت</button>';
+        html += '<button class="btn btn-info btn-sm" data-tab="reviews"><i class="fas fa-star"></i> نظرات</button>';
     }
     if (role === 'admin1' || role === 'admin2') {
         html += '<button class="btn btn-primary btn-sm" data-tab="bookings"><i class="fas fa-ticket-alt"></i> رزروها</button>';
@@ -980,7 +1128,7 @@ async function loadMyBookings() {
         container.innerHTML = '<p style="opacity:0.5;">🎫 هیچ رزروی ندارید</p>';
         return;
     }
-    var html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>تماشاگران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th></tr></thead><tbody>';
+    var html = '<table><thead><tr><th>فیلم</th><th>تعداد</th><th>تماشاگران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>بلیط</th></tr></thead><tbody>';
     for (var i = 0; i < myBookings.length; i++) {
         var b = myBookings[i];
         var movieName = b.movies ? b.movies.name : '-';
@@ -991,7 +1139,10 @@ async function loadMyBookings() {
                  b.payment_status === 'approved' ? '✅ تایید شده' :
                  b.payment_status === 'rejected' ? '❌ رد شده' :
                  b.payment_status === 'paid' ? '✅ پرداخت شده' : '❌ پرداخت نشده';
-        html += '<tr><td>' + movieName + '</td><td>' + b.ticket_count + '</td><td style="font-size:12px;">' + names + '</td><td>' + formatCurrency(total) + ' تومان</td><td style="color:#ffd700;">' + (b.booking_code || '-') + '</td><td>' + (b.status === 'active' ? '✅ فعال' : b.status === 'cancelled' ? '❌ لغو شده' : '⏰ منقضی') + '</td><td>' + ps + '</td></tr>';
+        var ticketBtn = (b.payment_status === 'paid' || b.payment_status === 'approved') 
+            ? '<button class="btn btn-warning btn-xs" onclick="showTicket(\'' + b.id + '\')"><i class="fas fa-ticket-alt"></i></button>' 
+            : '-';
+        html += '<tr><td>' + movieName + '</td><td>' + b.ticket_count + '</td><td style="font-size:12px;">' + names + '</td><td>' + formatCurrency(total) + ' تومان</td><td style="color:#ffd700;">' + (b.booking_code || '-') + '</td><td>' + (b.status === 'active' ? '✅ فعال' : b.status === 'cancelled' ? '❌ لغو شده' : '⏰ منقضی') + '</td><td>' + ps + '</td><td>' + ticketBtn + '</td></tr>';
     }
     html += '</tbody></table>';
     container.innerHTML = html;
@@ -1019,6 +1170,7 @@ async function loadMovies(containerId, filterType) {
         html += '<div class="movie-card"><div class="icon"><i class="fas fa-film"></i></div><h3>' + m.name + '</h3><div class="badge ' + cls + '">' + (statusMap[m.status] || m.status) + '</div><p style="opacity:0.6;font-size:13px;">📅 ' + date + '</p><p class="capacity">ظرفیت: ' + m.capacity + ' نفر</p><div class="price">' + formatCurrency(m.price) + ' تومان</div>';
         if (available) html += '<button class="btn btn-primary btn-sm" onclick="openBooking(\'' + m.id + '\')"><i class="fas fa-ticket-alt"></i> رزرو</button>';
         if (m.status === 'now_showing' && !user) html += '<button class="btn btn-glass btn-sm" onclick="toast(\'لطفاً وارد شوید\',\'error\')"><i class="fas fa-ticket-alt"></i> رزرو</button>';
+        html += '<button class="btn btn-glass btn-sm" onclick="openReviews(\'' + m.id + '\', \'' + m.name.replace(/'/g, "\\'") + '\')" style="margin-top:8px;"><i class="fas fa-star"></i> نظرات</button>';
         html += '</div>';
     }
     container.innerHTML = html;
@@ -1123,7 +1275,7 @@ document.getElementById('bookingForm').addEventListener('submit', async function
     var total = count * movie.price;
     try {
         var booking = await insertBooking({ user_id: user.id, movie_id: selectedMovie, ticket_count: count, passengers: passengers, total_price: total });
-        toast('✅ رزرو موفق! کد: ' + booking.booking_code + ' - در انتظار تایید ادمین', 'success');
+        toast('✅ رزرو موفق! کد: ' + booking.booking_code, 'success');
         closeModal('bookingModal');
         loadMyBookings();
         loadStats();
@@ -1176,10 +1328,40 @@ async function loadAdmin(tab) {
         else if (tab === 'report') renderReport(container);
         else if (tab === 'attendance') await renderAttendance(container);
         else if (tab === 'card') await renderCardSettings(container);
+        else if (tab === 'reviews') await renderReviewsAdmin(container);
     } catch(e) {
         console.error('خطا در loadAdmin:', e);
         container.innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;"><i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:15px;display:block;"></i><p>خطا: ' + e.message + '</p></div>';
     }
+}
+
+async function renderReviewsAdmin(container) {
+    if (role !== 'admin1') {
+        container.innerHTML = '🔒 فقط ادمین کل';
+        return;
+    }
+    var reviews = [];
+    if (!mock) {
+        var { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+        reviews = data || [];
+    }
+    if (reviews.length === 0) {
+        container.innerHTML = '<div class="glass-title" style="font-size:18px;">⭐ نظرات کاربران (0)</div><p style="text-align:center;padding:40px;opacity:0.5;">هنوز نظری ثبت نشده</p>';
+        return;
+    }
+    var users = await getUsers();
+    var movies = await getMovies();
+    var html = '<div class="glass-title" style="font-size:18px;">⭐ نظرات کاربران (' + reviews.length + ')</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>امتیاز</th><th>نظر</th><th>تاریخ</th></tr></thead><tbody>';
+    reviews.forEach(function(r) {
+        var u = users.find(function(x) { return x.id === r.user_id; });
+        var m = movies.find(function(x) { return x.id === r.movie_id; });
+        var userName = u ? (u.first_name + ' ' + u.last_name) : 'کاربر';
+        var movieName = m ? m.name : '-';
+        var stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        html += '<tr><td>' + userName + '</td><td>' + movieName + '</td><td style="color:#ffd700;">' + stars + '</td><td style="font-size:12px;">' + (r.comment || '-') + '</td><td>' + toPersian(r.created_at) + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
 }
 
 async function renderCardSettings(container) {
@@ -1191,20 +1373,8 @@ async function renderCardSettings(container) {
     var admin = users.find(function(u) { return u.role === 'admin1'; });
     var currentCard = admin && admin.card_number ? admin.card_number : 'تنظیم نشده';
     container.innerHTML = '<div class="glass-title" style="font-size:18px;"><i class="fas fa-credit-card"></i> تنظیم شماره کارت</div>' +
-        '<div class="card-settings-box">' +
-        '<p class="label">شماره کارت فعلی:</p>' +
-        '<p class="value">' + currentCard + '</p>' +
-        '<p class="hint">این شماره کارت به همه کاربران در زمان رزرو نمایش داده می‌شود</p>' +
-        '</div>' +
-        '<form id="cardForm">' +
-        '<div class="form-group">' +
-        '<label>💳 شماره کارت جدید</label>' +
-        '<input type="text" id="cardNumberInput" placeholder="6037-9912-3456-7890" value="' + (currentCard !== 'تنظیم نشده' ? currentCard : '') + '" style="direction:ltr;font-family:monospace;font-size:18px;letter-spacing:3px;text-align:center;padding:16px;">' +
-        '<small>شماره کارت را با خط تیره (-) جدا کنید</small>' +
-        '</div>' +
-        '<button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> ذخیره شماره کارت</button>' +
-        '</form>';
-    
+        '<div class="card-settings-box"><p class="label">شماره کارت فعلی:</p><p class="value">' + currentCard + '</p><p class="hint">این شماره کارت به همه کاربران در زمان رزرو نمایش داده می‌شود</p></div>' +
+        '<form id="cardForm"><div class="form-group"><label>💳 شماره کارت جدید</label><input type="text" id="cardNumberInput" placeholder="6037-9912-3456-7890" value="' + (currentCard !== 'تنظیم نشده' ? currentCard : '') + '" style="direction:ltr;font-family:monospace;font-size:18px;letter-spacing:3px;text-align:center;padding:16px;"><small>شماره کارت را با خط تیره (-) جدا کنید</small></div><button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> ذخیره شماره کارت</button></form>';
     document.getElementById('cardForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         var newCard = document.getElementById('cardNumberInput').value.trim();
@@ -1217,7 +1387,7 @@ async function renderCardSettings(container) {
                 user.card_number = newCard;
                 localStorage.setItem('cinema_user', JSON.stringify(user));
             }
-            toast('✅ شماره کارت با موفقیت به‌روز شد!', 'success');
+            toast('✅ شماره کارت به‌روز شد!', 'success');
             loadAdmin('card');
         } catch(e) { toast('❌ خطا: ' + e.message, 'error'); }
     });
@@ -1225,7 +1395,7 @@ async function renderCardSettings(container) {
 
 async function renderUsers(container) {
     if (role !== 'admin1') {
-        container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;"><i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i><p>🔒 مدیریت کاربران فقط برای ادمین کل قابل دسترسی است</p></div>';
+        container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;"><i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i><p>🔒 مدیریت کاربران فقط برای ادمین کل</p></div>';
         return;
     }
     var users = await getUsers();
@@ -1238,9 +1408,7 @@ async function renderUsers(container) {
         var code = u.code || generateCode();
         html += '<tr><td>' + u.first_name + ' ' + u.last_name + '</td><td>' + u.phone + '</td><td style="color:#ffd700;">' + code + '</td><td>' + r + '</td><td>' + l + '</td><td><div class="table-actions">';
         html += '<button class="btn btn-warning btn-xs" onclick="editUser(\'' + u.id + '\')"><i class="fas fa-edit"></i></button>';
-        if (u.role === 'admin2' && !self) {
-            html += '<button class="btn btn-info btn-xs" onclick="editPermissions(\'' + u.id + '\')"><i class="fas fa-key"></i></button>';
-        }
+        if (u.role === 'admin2' && !self) html += '<button class="btn btn-info btn-xs" onclick="editPermissions(\'' + u.id + '\')"><i class="fas fa-key"></i></button>';
         if (!self) {
             html += '<button class="btn btn-success btn-xs" onclick="promoteUser(\'' + u.id + '\')"><i class="fas fa-arrow-up"></i></button>';
             if (u.role !== 'admin1') html += '<button class="btn btn-danger btn-xs" onclick="demoteUser(\'' + u.id + '\')"><i class="fas fa-arrow-down"></i></button>';
@@ -1254,7 +1422,7 @@ async function renderUsers(container) {
 }
 
 window.editPermissions = async function(userId) {
-    if (role !== 'admin1') { toast('❌ فقط ادمین کل می‌تواند سطح دسترسی را ویرایش کند', 'error'); return; }
+    if (role !== 'admin1') { toast('❌ فقط ادمین کل', 'error'); return; }
     try {
         var users = await getUsers();
         var u = users.find(function(x) { return String(x.id) === String(userId); });
@@ -1273,22 +1441,16 @@ window.editPermissions = async function(userId) {
 
 document.getElementById('permissionsForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    if (role !== 'admin1') { toast('❌ فقط ادمین کل می‌تواند سطح دسترسی را ویرایش کند', 'error'); return; }
+    if (role !== 'admin1') { toast('❌ فقط ادمین کل', 'error'); return; }
     var userId = document.getElementById('permUserId').value;
-    var canUsers = document.getElementById('permCanUsers').checked;
-    var canMovies = document.getElementById('permCanMovies').checked;
-    var canBookings = document.getElementById('permCanBookings').checked;
-    var canReports = document.getElementById('permCanReports').checked;
-    var canAttendance = document.getElementById('permCanAttendance').checked;
-    var cardNumber = document.getElementById('permCardNumber').value.trim();
     try {
         await updateUser(userId, {
-            can_manage_users: canUsers,
-            can_manage_movies: canMovies,
-            can_manage_bookings: canBookings,
-            can_view_reports: canReports,
-            can_manage_attendance: canAttendance,
-            card_number: cardNumber
+            can_manage_users: document.getElementById('permCanUsers').checked,
+            can_manage_movies: document.getElementById('permCanMovies').checked,
+            can_manage_bookings: document.getElementById('permCanBookings').checked,
+            can_view_reports: document.getElementById('permCanReports').checked,
+            can_manage_attendance: document.getElementById('permCanAttendance').checked,
+            card_number: document.getElementById('permCardNumber').value.trim()
         });
         closeModal('permissionsModal');
         toast('✅ سطح دسترسی به‌روز شد!', 'success');
@@ -1332,7 +1494,7 @@ window.promoteUser = async function(userId) {
     var users = await getUsers();
     var u = users.find(function(x) { return String(x.id) === String(userId); });
     if (!u) { toast('❌ کاربر یافت نشد', 'error'); return; }
-    if (role !== 'admin1') { toast('❌ فقط ادمین کل می‌تواند ارتقا دهد', 'error'); return; }
+    if (role !== 'admin1') { toast('❌ فقط ادمین کل', 'error'); return; }
     var newRole = u.role === 'admin2' ? 'admin1' : 'admin2';
     if (u.role === 'admin1') { toast('⚠️ این کاربر قبلاً ادمین کل است', 'info'); return; }
     try {
@@ -1372,7 +1534,7 @@ window.deleteUserAccount = async function(userId) {
 
 async function renderMoviesAdmin(container) {
     if (role !== 'admin1') {
-        container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;"><i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i><p>🔒 مدیریت فیلم‌ها فقط برای ادمین کل قابل دسترسی است</p></div>';
+        container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.6;"><i class="fas fa-lock" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i><p>🔒 مدیریت فیلم‌ها فقط برای ادمین کل</p></div>';
         return;
     }
     var movies = await getMovies();
@@ -1419,7 +1581,7 @@ window.deleteMovieAdmin = async function(movieId) {
 
 function renderAddMovie(container) {
     if (role !== 'admin1') {
-        container.innerHTML = '🔒 فقط ادمین کل می‌تواند فیلم اضافه کند';
+        container.innerHTML = '🔒 فقط ادمین کل';
         return;
     }
     container.innerHTML = '<div class="glass-title" style="font-size:18px;">➕ افزودن فیلم جدید</div><form id="addMovieForm"><div class="form-group"><label>نام فیلم</label><input type="text" id="mName" placeholder="تایتانیک" required></div><div class="form-row"><div class="form-group"><label>سال</label><input type="number" id="mYear" placeholder="مثلا 1403" min="1300" max="1450" required></div><div class="form-group"><label>ماه</label><select id="mMonth" required><option value="">انتخاب ماه</option><option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option><option value="4">تیر</option><option value="5">مرداد</option><option value="6">شهریور</option><option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option><option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option></select></div><div class="form-group"><label>روز</label><input type="number" id="mDay" placeholder="مثلا 25" min="1" max="31" required></div></div><div class="form-row"><div class="form-group"><label>ساعت</label><input type="time" id="mTime"></div><div class="form-group"><label>ظرفیت</label><input type="number" id="mCapacity" placeholder="100" required></div></div><div class="form-row"><div class="form-group"><label>قیمت (تومان)</label><input type="number" id="mPrice" placeholder="150000" required></div><div class="form-group"><label>وضعیت</label><select id="mStatus"><option value="coming_soon">به زودی</option><option value="now_showing">در حال اکران</option><option value="ended">پایان یافته</option></select></div></div><button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> افزودن فیلم</button></form>';
@@ -1458,7 +1620,7 @@ async function renderBookings(container) {
             return;
         }
         
-        var html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها (' + bookings.length + ')</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ</th><th>تعداد</th><th>تماشاگران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>رسید</th><th>حضور</th><th>عملیات</th></tr></thead><tbody>';
+        var html = '<div class="glass-title" style="font-size:18px;">🎟️ رزروها (' + bookings.length + ')</div><div class="table-wrap"><table><thead><tr><th>کاربر</th><th>فیلم</th><th>تاریخ</th><th>تعداد</th><th>تماشاگران</th><th>قیمت</th><th>کد</th><th>وضعیت</th><th>پرداخت</th><th>رسید</th><th>حضور</th><th>بلیط</th><th>عملیات</th></tr></thead><tbody>';
         
         for (var i = 0; i < bookings.length; i++) {
             var b = bookings[i];
@@ -1472,7 +1634,7 @@ async function renderBookings(container) {
             var pa = '';
             var receipt = '-';
             if (b.receipt_image && typeof b.receipt_image === 'string' && b.receipt_image.length > 5) {
-                receipt = '<a href="' + b.receipt_image + '" target="_blank" style="color:#ffd700;font-size:12px;text-decoration:underline;cursor:pointer;">📷 مشاهده</a>';
+                receipt = '<a href="' + b.receipt_image + '" target="_blank" style="color:#ffd700;font-size:12px;text-decoration:underline;">📷 مشاهده</a>';
             }
             
             if (b.payment_status === 'waiting_for_approval') {
@@ -1495,10 +1657,7 @@ async function renderBookings(container) {
             
             var att = null;
             for (var k = 0; k < attendances.length; k++) {
-                if (attendances[k].booking_id === b.id) {
-                    att = attendances[k];
-                    break;
-                }
+                if (attendances[k].booking_id === b.id) { att = attendances[k]; break; }
             }
             
             var attStatus = '⏳ ثبت نشده';
@@ -1510,84 +1669,57 @@ async function renderBookings(container) {
                 if (att.status === 'present') attStatus = '✅ حاضر';
                 else if (att.status === 'absent') attStatus = '❌ غایب';
                 else if (att.status === 'late') attStatus = '⏰ دیر';
-                if (att.check_out_time === null || att.check_out_time === undefined) {
-                    canCheckOut = true;
-                }
+                if (att.check_out_time === null || att.check_out_time === undefined) canCheckOut = true;
             }
             
-            html += '<tr><td>' + userName + '</td><td>' + movieName + '</td><td>' + releaseDate + '</td><td>' + b.ticket_count + '</td><td style="font-size:12px;">' + names + '</td><td>' + formatCurrency(total) + ' تومان</td><td style="color:#ffd700;">' + (b.booking_code || '-') + '</td><td>' + (b.status === 'active' ? '✅ فعال' : b.status === 'cancelled' ? '❌ لغو شده' : '⏰ منقضی') + '</td><td>' + ps + '</td><td>' + receipt + '</td><td>' + attStatus + '</td><td><div class="table-actions">' + pa;
+            html += '<tr><td>' + userName + '</td><td>' + movieName + '</td><td>' + releaseDate + '</td><td>' + b.ticket_count + '</td><td style="font-size:12px;">' + names + '</td><td>' + formatCurrency(total) + ' تومان</td><td style="color:#ffd700;">' + (b.booking_code || '-') + '</td><td>' + (b.status === 'active' ? '✅ فعال' : b.status === 'cancelled' ? '❌ لغو شده' : '⏰ منقضی') + '</td><td>' + ps + '</td><td>' + receipt + '</td><td>' + attStatus + '</td>';
             
+            html += '<td>';
+            if (b.payment_status === 'paid' || b.payment_status === 'approved') {
+                html += '<button class="btn btn-warning btn-xs" onclick="showTicket(\'' + b.id + '\')"><i class="fas fa-ticket-alt"></i></button>';
+            } else {
+                html += '-';
+            }
+            html += '</td>';
+            
+            html += '<td><div class="table-actions">' + pa;
             if (b.status === 'active' && b.payment_status === 'paid' && !checkedIn) {
-                html += '<button class="btn btn-success btn-xs" onclick="checkIn(\'' + b.id + '\')"><i class="fas fa-user-check"></i> حضور</button>';
+                html += '<button class="btn btn-success btn-xs" onclick="checkIn(\'' + b.id + '\')"><i class="fas fa-user-check"></i></button>';
             }
             if (checkedIn && canCheckOut) {
-                html += '<button class="btn btn-warning btn-xs" onclick="checkOut(\'' + att.id + '\')"><i class="fas fa-user-times"></i> خروج</button>';
+                html += '<button class="btn btn-warning btn-xs" onclick="checkOut(\'' + att.id + '\')"><i class="fas fa-user-times"></i></button>';
             }
             if (b.status === 'active') {
-                html += '<button class="btn btn-danger btn-xs" onclick="cancelBooking(\'' + b.id + '\')"><i class="fas fa-times"></i> لغو</button>';
+                html += '<button class="btn btn-danger btn-xs" onclick="cancelBooking(\'' + b.id + '\')"><i class="fas fa-times"></i></button>';
             }
             html += '</div></td></tr>';
         }
         html += '</tbody></table></div>';
         container.innerHTML = html;
     } catch(e) {
-        console.error('خطا در renderBookings:', e);
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;"><i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:15px;display:block;"></i><p>خطا: ' + e.message + '</p></div>';
+        console.error('خطا:', e);
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f87171;"><p>خطا: ' + e.message + '</p></div>';
     }
 }
 
-// ============================================
-// approvePayment - نسخه اصلاح‌شده
-// ============================================
 window.approvePayment = async function(bookingId) {
-    if (role !== 'admin1') { 
-        toast('❌ فقط ادمین کل می‌تواند تایید کند', 'error'); 
-        return; 
-    }
-    if (!confirm('آیا رسید صحیح است و تایید می‌کنید؟')) return;
-    
+    if (role !== 'admin1') { toast('❌ فقط ادمین کل', 'error'); return; }
+    if (!confirm('آیا رسید صحیح است؟')) return;
     try {
-        console.log('🔍 شروع تایید رزرو:', bookingId);
-        
-        var updateData = { 
+        await updateBooking(bookingId, {
             payment_status: 'approved',
             payment_date: new Date().toISOString(),
             payment_code: 'PAY-' + Math.random().toString(36).substring(2, 8).toUpperCase()
-        };
-        
-        if (mock) {
-            var idx = mockBookings.findIndex(function(b) { return b.id === bookingId; });
-            if (idx !== -1) {
-                Object.assign(mockBookings[idx], updateData);
-            }
-        } else {
-            var { data, error } = await supabase
-                .from('bookings')
-                .update(updateData)
-                .eq('id', bookingId)
-                .select()
-                .single();
-            
-            if (error) {
-                console.error('❌ خطا:', error);
-                toast('❌ خطا در تایید: ' + error.message, 'error');
-                return;
-            }
-            console.log('✅ تایید شد:', data);
-        }
-        
+        });
         toast('✅ پرداخت تایید شد!', 'success');
         loadAdmin('bookings');
         loadStats();
-    } catch(e) {
-        console.error('❌ خطای کلی:', e);
-        toast('❌ خطا: ' + e.message, 'error');
-    }
+    } catch(e) { toast('❌ خطا: ' + e.message, 'error'); }
 };
 
 window.rejectPayment = async function(bookingId) {
-    if (role !== 'admin1') { toast('❌ فقط ادمین کل می‌تواند رد کند', 'error'); return; }
-    var reason = prompt('دلیل رد پرداخت:');
+    if (role !== 'admin1') { toast('❌ فقط ادمین کل', 'error'); return; }
+    var reason = prompt('دلیل رد:');
     if (reason === null) return;
     try {
         var bookings = await getBookings();
@@ -1599,8 +1731,8 @@ window.rejectPayment = async function(bookingId) {
 };
 
 window.confirmPaymentReceived = async function(bookingId) {
-    if (role !== 'admin1') { toast('❌ فقط ادمین کل می‌تواند تایید کند', 'error'); return; }
-    if (!confirm('آیا مبلغ توسط کاربر واریز شده است؟')) return;
+    if (role !== 'admin1') { toast('❌ فقط ادمین کل', 'error'); return; }
+    if (!confirm('آیا مبلغ واریز شده است؟')) return;
     try {
         await updateBooking(bookingId, { payment_status: 'paid', payment_date: new Date().toISOString() });
         toast('✅ پرداخت نهایی تایید شد!', 'success');
@@ -1610,7 +1742,7 @@ window.confirmPaymentReceived = async function(bookingId) {
 };
 
 window.cancelBooking = async function(bookingId) {
-    if (!confirm('آیا از لغو این رزرو اطمینان دارید؟')) return;
+    if (!confirm('لغو این رزرو؟')) return;
     try {
         await updateBooking(bookingId, { status: 'cancelled' });
         toast('✅ رزرو لغو شد', 'success');
@@ -1625,8 +1757,8 @@ window.checkIn = async function(bookingId) {
         if (!b) { toast('❌ رزرو یافت نشد', 'error'); return; }
         var atts = await getAttendances();
         var existing = atts.find(function(x) { return x.booking_id === bookingId; });
-        if (existing) { toast('⚠️ این رزرو قبلاً ثبت حضور شده است', 'info'); return; }
-        await insertAttendance({ booking_id: bookingId, user_id: b.user_id, movie_id: b.movie_id, check_in_time: new Date().toISOString(), status: 'present', notes: 'ثبت حضور در سینما' });
+        if (existing) { toast('⚠️ قبلاً ثبت شده', 'info'); return; }
+        await insertAttendance({ booking_id: bookingId, user_id: b.user_id, movie_id: b.movie_id, check_in_time: new Date().toISOString(), status: 'present', notes: 'ثبت حضور' });
         toast('✅ حضور ثبت شد!', 'success');
         loadAdmin('bookings');
         loadStats();
@@ -1634,7 +1766,7 @@ window.checkIn = async function(bookingId) {
 };
 
 window.checkOut = async function(attendanceId) {
-    if (!confirm('آیا از خروج این شخص اطمینان دارید؟')) return;
+    if (!confirm('ثبت خروج؟')) return;
     try {
         await updateAttendance(attendanceId, { check_out_time: new Date().toISOString() });
         toast('✅ خروج ثبت شد', 'success');
@@ -1644,7 +1776,7 @@ window.checkOut = async function(attendanceId) {
 
 async function renderAttendance(container) {
     if (role !== 'admin1' && role !== 'admin2') {
-        container.innerHTML = '🔒 شما دسترسی ندارید';
+        container.innerHTML = '🔒 دسترسی ندارید';
         return;
     }
     var atts = await getAttendances();
@@ -1665,8 +1797,24 @@ async function renderAttendance(container) {
 }
 
 function renderReport(container) {
-    if (role !== 'admin1') { container.innerHTML = '🔒 فقط ادمین کل به گزارشات دسترسی دارد'; return; }
-    container.innerHTML = '<div class="glass-title" style="font-size:18px;">📊 گزارشات</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;"><button class="btn btn-primary" onclick="exportExcel()"><i class="fas fa-file-excel"></i> کاربران</button><button class="btn btn-primary" onclick="exportBookingsExcel()"><i class="fas fa-file-excel"></i> رزروها</button><button class="btn btn-primary" onclick="exportAttendanceExcel()"><i class="fas fa-file-excel"></i> حضور و غیاب</button></div><div id="reportStats"><p style="opacity:0.6;">📈 آمار کلی سیستم</p><div class="stats-row" style="margin-top:15px;"><div class="stat-card"><i class="fas fa-users"></i><div class="number" id="reportUsers">-</div><div class="label">کاربران</div></div><div class="stat-card"><i class="fas fa-film"></i><div class="number" id="reportMovies">-</div><div class="label">فیلم‌ها</div></div><div class="stat-card"><i class="fas fa-ticket-alt"></i><div class="number" id="reportBookings">-</div><div class="label">رزروها</div></div><div class="stat-card"><i class="fas fa-dollar-sign"></i><div class="number" id="reportRevenue">-</div><div class="label">درآمد</div></div><div class="stat-card"><i class="fas fa-user-check"></i><div class="number" id="reportPresent">-</div><div class="label">حاضر</div></div><div class="stat-card"><i class="fas fa-user-slash"></i><div class="number" id="reportAbsent">-</div><div class="label">غایب</div></div></div></div>';
+    if (role !== 'admin1') { container.innerHTML = '🔒 فقط ادمین کل'; return; }
+    container.innerHTML = '<div class="glass-title" style="font-size:18px;">📊 گزارشات</div>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">' +
+        '<button class="btn btn-primary" onclick="exportExcel()"><i class="fas fa-file-excel"></i> کاربران</button>' +
+        '<button class="btn btn-primary" onclick="exportBookingsExcel()"><i class="fas fa-file-excel"></i> رزروها</button>' +
+        '<button class="btn btn-primary" onclick="exportAttendanceExcel()"><i class="fas fa-file-excel"></i> حضور و غیاب</button>' +
+        '</div>' +
+        '<div id="reportStats"><p style="opacity:0.6;">📈 آمار کلی سیستم</p>' +
+        '<div class="stats-row" style="margin-top:15px;">' +
+        '<div class="stat-card"><i class="fas fa-users"></i><div class="number" id="reportUsers">-</div><div class="label">کاربران</div></div>' +
+        '<div class="stat-card"><i class="fas fa-film"></i><div class="number" id="reportMovies">-</div><div class="label">فیلم‌ها</div></div>' +
+        '<div class="stat-card"><i class="fas fa-ticket-alt"></i><div class="number" id="reportBookings">-</div><div class="label">رزروها</div></div>' +
+        '<div class="stat-card"><i class="fas fa-dollar-sign"></i><div class="number" id="reportRevenue">-</div><div class="label">درآمد</div></div>' +
+        '<div class="stat-card"><i class="fas fa-user-check"></i><div class="number" id="reportPresent">-</div><div class="label">حاضر</div></div>' +
+        '<div class="stat-card"><i class="fas fa-user-slash"></i><div class="number" id="reportAbsent">-</div><div class="label">غایب</div></div>' +
+        '</div></div>' +
+        '<div class="glass" style="margin-top:20px;"><div class="glass-title" style="font-size:18px;">📈 نمودار درآمد 7 روز اخیر</div><div id="revenueChart"></div></div>';
+    
     getUsers().then(function(users) { document.getElementById('reportUsers').textContent = users.length; });
     getMovies().then(function(movies) { document.getElementById('reportMovies').textContent = movies.length; });
     getBookings().then(function(bookings) {
@@ -1681,7 +1829,160 @@ function renderReport(container) {
         document.getElementById('reportPresent').textContent = present;
         document.getElementById('reportAbsent').textContent = absent;
     });
+    
+    setTimeout(function() { renderRevenueChart(document.getElementById('revenueChart')); }, 500);
 }
+
+async function renderRevenueChart(container) {
+    if (!container) return;
+    var bookings = await getBookings();
+    var data = [];
+    var labels = [];
+    for (var i = 6; i >= 0; i--) {
+        var d = new Date();
+        d.setDate(d.getDate() - i);
+        var dayStr = d.toISOString().split('T')[0];
+        var dayRevenue = 0;
+        bookings.forEach(function(b) {
+            if (b.payment_status === 'paid' && b.payment_date) {
+                var bDay = new Date(b.payment_date).toISOString().split('T')[0];
+                if (bDay === dayStr) dayRevenue += b.total_price || 0;
+            }
+        });
+        labels.push(toPersian(d).split(' ').slice(0,2).join(' '));
+        data.push(dayRevenue);
+    }
+    var maxRevenue = Math.max.apply(null, data) || 1;
+    var html = '<div style="display:flex;justify-content:space-around;align-items:flex-end;height:250px;gap:10px;padding:20px;background:rgba(255,255,255,.02);border-radius:16px;">';
+    for (var j = 0; j < data.length; j++) {
+        var height = (data[j] / maxRevenue) * 180;
+        html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;">';
+        html += '<div style="font-size:11px;color:#ffd700;font-weight:700;">' + formatCurrency(data[j]) + '</div>';
+        html += '<div class="revenue-bar" style="height:' + Math.max(height, 5) + 'px;"></div>';
+        html += '<div style="font-size:10px;opacity:0.6;text-align:center;">' + labels[j] + '</div>';
+        html += '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+window.showTicket = async function(bookingId) {
+    try {
+        var bookings = await getBookings();
+        var b = bookings.find(function(x) { return x.id === bookingId; });
+        if (!b) { toast('❌ رزرو یافت نشد', 'error'); return; }
+        var movieName = b.movies ? b.movies.name : '-';
+        var userName = b.users ? (b.users.first_name + ' ' + b.users.last_name) : '-';
+        var releaseDate = b.movies ? toPersian(b.movies.release_date) : '-';
+        var passengers = b.passengers || [];
+        var qrText = JSON.stringify({ code: b.booking_code, name: userName, movie: movieName, date: releaseDate, count: b.ticket_count });
+        var ticketHTML = '<div style="margin-bottom:20px;"><div style="font-size:20px;font-weight:900;color:#ffd700;margin-bottom:10px;">🎬 سینما</div><div style="font-size:14px;opacity:0.6;">بلیط ورود به سینما</div></div>' +
+            '<div style="background:white;border-radius:16px;padding:16px;margin-bottom:20px;display:inline-block;"><div id="qrcode"></div></div>' +
+            '<div style="text-align:right;font-size:13px;">' +
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);"><span style="opacity:0.6;">کد بلیط:</span><strong style="color:#ffd700;">' + b.booking_code + '</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);"><span style="opacity:0.6;">نام:</span><strong>' + userName + '</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);"><span style="opacity:0.6;">فیلم:</span><strong>' + movieName + '</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);"><span style="opacity:0.6;">تاریخ:</span><strong>' + releaseDate + '</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);"><span style="opacity:0.6;">تعداد:</span><strong>' + b.ticket_count + ' نفر</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="opacity:0.6;">تماشاگران:</span><strong style="font-size:12px;">' + passengers.map(function(p) { return p.full_name; }).join('، ') + '</strong></div>' +
+            '</div>' +
+            '<div style="font-size:11px;opacity:0.5;margin-top:15px;">📌 این بلیط را چاپ کرده و هنگام ورود تحویل دهید</div>';
+        document.getElementById('ticketContent').innerHTML = ticketHTML;
+        openModal('ticketModal');
+        setTimeout(function() {
+            var qrDiv = document.getElementById('qrcode');
+            if (qrDiv && typeof QRCode !== 'undefined') {
+                qrDiv.innerHTML = '';
+                new QRCode(qrDiv, { text: qrText, width: 200, height: 200, colorDark: '#0a1628', colorLight: '#ffffff' });
+            }
+        }, 100);
+    } catch(e) { toast('❌ خطا: ' + e.message, 'error'); }
+};
+
+window.printTicket = function() {
+    var content = document.getElementById('ticketContent').innerHTML;
+    var printWindow = window.open('', '', 'height=700,width=500');
+    printWindow.document.write('<html dir="rtl"><head><title>چاپ بلیط</title><style>body{font-family:Tahoma,sans-serif;padding:20px;text-align:center;}</style></head><body>' + content + '</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+};
+
+window.openReviews = async function(movieId, movieName) {
+    currentReviewMovie = movieId;
+    currentRating = 0;
+    document.getElementById('reviewsMovieTitle').textContent = 'نظرات ' + movieName;
+    document.getElementById('reviewComment').value = '';
+    document.querySelectorAll('#ratingStars .rating-star').forEach(function(s) { s.style.color = '#555'; });
+    await loadReviews(movieId);
+    openModal('reviewsModal');
+};
+
+async function loadReviews(movieId) {
+    var container = document.getElementById('reviewsList');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    try {
+        var reviews = await getReviews(movieId);
+        if (reviews.length === 0) {
+            container.innerHTML = '<p style="text-align:center;padding:30px;opacity:0.5;">هنوز نظری ثبت نشده. اولین نفر باشید!</p>';
+            return;
+        }
+        var users = await getUsers();
+        var totalRating = 0;
+        reviews.forEach(function(r) { totalRating += r.rating; });
+        var avgRating = (totalRating / reviews.length).toFixed(1);
+        var html = '<div style="text-align:center;margin-bottom:20px;padding:15px;background:rgba(255,215,0,.08);border-radius:12px;">' +
+            '<div style="font-size:32px;font-weight:900;color:#ffd700;">' + avgRating + '</div>' +
+            '<div style="font-size:20px;color:#ffd700;">' + '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating)) + '</div>' +
+            '<div style="font-size:12px;opacity:0.6;margin-top:5px;">از ' + reviews.length + ' نظر</div></div>';
+        reviews.forEach(function(r) {
+            var u = users.find(function(x) { return x.id === r.user_id; });
+            var userName = u ? (u.first_name + ' ' + u.last_name) : 'کاربر';
+            var stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+            html += '<div class="review-item">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><strong style="font-size:13px;">' + userName + '</strong><span style="color:#ffd700;font-size:16px;">' + stars + '</span></div>';
+            if (r.comment) html += '<p style="font-size:13px;opacity:0.8;line-height:1.6;">' + r.comment + '</p>';
+            html += '<div style="font-size:11px;opacity:0.4;margin-top:8px;">' + toPersian(r.created_at) + '</div>';
+            html += '</div>';
+        });
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = '<p style="text-align:center;padding:20px;color:#f87171;">خطا در بارگذاری</p>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var stars = document.querySelectorAll('#ratingStars .rating-star');
+    stars.forEach(function(star) {
+        star.addEventListener('mouseenter', function() {
+            var r = parseInt(this.dataset.rating);
+            stars.forEach(function(s) { s.style.color = parseInt(s.dataset.rating) <= r ? '#ffd700' : '#555'; });
+        });
+        star.addEventListener('click', function() {
+            currentRating = parseInt(this.dataset.rating);
+            stars.forEach(function(s) { s.style.color = parseInt(s.dataset.rating) <= currentRating ? '#ffd700' : '#555'; });
+        });
+    });
+    var starsContainer = document.getElementById('ratingStars');
+    if (starsContainer) {
+        starsContainer.addEventListener('mouseleave', function() {
+            stars.forEach(function(s) { s.style.color = parseInt(s.dataset.rating) <= currentRating ? '#ffd700' : '#555'; });
+        });
+    }
+});
+
+window.submitReview = async function() {
+    if (!user) { toast('❌ لطفاً وارد شوید', 'error'); return; }
+    if (currentRating === 0) { toast('❌ لطفاً امتیاز دهید', 'error'); return; }
+    var comment = document.getElementById('reviewComment').value.trim();
+    try {
+        await insertReview({ user_id: user.id, movie_id: currentReviewMovie, rating: currentRating, comment: comment || null });
+        toast('✅ نظر شما ثبت شد!', 'success');
+        currentRating = 0;
+        document.getElementById('reviewComment').value = '';
+        document.querySelectorAll('#ratingStars .rating-star').forEach(function(s) { s.style.color = '#555'; });
+        await loadReviews(currentReviewMovie);
+    } catch(e) { toast('❌ خطا: ' + e.message, 'error'); }
+};
 
 window.exportExcel = async function() {
     var users = await getUsers();
@@ -1775,7 +2076,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     applyTheme(THEMES['سلطنتی']);
     document.getElementById('saveThemeBtn').addEventListener('click', function() {
         if (user) {
-            if (mock) { toast('💾 در حالت Mock، تم در حافظه ذخیره شد', 'success'); return; }
+            if (mock) { toast('💾 تم ذخیره شد (Mock)', 'success'); return; }
             supabase.from('settings').upsert({ key: 'theme_colors', value: currentTheme, updated_by: user.id }, { onConflict: 'key' }).then(function() {
                 toast('💾 تم ذخیره شد!', 'success');
             }).catch(function() {
@@ -1785,6 +2086,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             toast('⚠️ ابتدا وارد شوید', 'error');
         }
     });
+    setInterval(function() { if (user) updateNotifBadge(); }, 30000);
 });
 
 })();
