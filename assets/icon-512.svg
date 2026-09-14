@@ -1,0 +1,250 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#173957"/>
+      <stop offset="38%" stop-color="#102944"/>
+      <stop offset="72%" stop-color="#0d1f36"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffbd0"/>
+      <stop offset="18%" stop-color="#fff09a"/>
+      <stop offset="40%" stop-color="#ffd700"/>
+      <stop offset="72%" stop-color="#ffc000"/>
+      <stop offset="100%" stop-color="#f0a500"/>
+    </linearGradient>
+
+    <linearGradient id="goldVertical" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff09a"/>
+      <stop offset="30%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#e99a00"/>
+    </linearGradient>
+
+    <linearGradient id="film" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e89b00"/>
+      <stop offset="25%" stop-color="#ffd700"/>
+      <stop offset="50%" stop-color="#fff0a0"/>
+      <stop offset="75%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#e89b00"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14"
+                    flood-color="#000000" flood-opacity=".65"/>
+    </filter>
+
+    <filter id="softGlow" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="textGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Main background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+
+  <!-- Outer glass border -->
+  <rect x="7" y="7" width="498" height="498" rx="94"
+        fill="none"
+        stroke="#2b6ba8"
+        stroke-width="6"
+        opacity=".8"/>
+
+  <!-- Inner glass highlight -->
+  <path d="M75 177
+           C78 103 133 60 210 51"
+        fill="none"
+        stroke="#ffffff"
+        stroke-width="7"
+        stroke-linecap="round"
+        opacity=".07"/>
+
+  <!-- Decorative top glow -->
+  <ellipse cx="260" cy="85" rx="120" ry="35"
+           fill="#ffd700"
+           opacity=".035"
+           filter="url(#softGlow)"/>
+
+  <!-- Rear film reel -->
+  <g filter="url(#shadow)">
+    <circle cx="184" cy="132" r="70" fill="url(#gold)"/>
+    <circle cx="184" cy="132" r="54" fill="#e9a100"/>
+
+    <g fill="#0a1628">
+      <circle cx="184" cy="99" r="13"/>
+      <circle cx="214" cy="118" r="13"/>
+      <circle cx="207" cy="151" r="13"/>
+      <circle cx="171" cy="163" r="13"/>
+      <circle cx="151" cy="123" r="13"/>
+    </g>
+
+    <circle cx="184" cy="132" r="12" fill="#ffd700"/>
+    <circle cx="184" cy="132" r="5" fill="#fff3a0"/>
+  </g>
+
+  <!-- Front film reel -->
+  <g filter="url(#shadow)">
+    <circle cx="278" cy="105" r="80" fill="url(#gold)"/>
+    <circle cx="278" cy="105" r="61" fill="#e8a000"/>
+
+    <g fill="#0a1628">
+      <circle cx="278" cy="68" r="15"/>
+      <circle cx="313" cy="88" r="15"/>
+      <circle cx="306" cy="123" r="15"/>
+      <circle cx="271" cy="137" r="15"/>
+      <circle cx="239" cy="100" r="15"/>
+    </g>
+
+    <circle cx="278" cy="105" r="13" fill="#ffd700"/>
+    <circle cx="278" cy="105" r="6" fill="#fff3a0"/>
+  </g>
+
+  <!-- Cinema camera -->
+  <g filter="url(#shadow)">
+    <!-- Main body -->
+    <rect x="127" y="181" width="239" height="139"
+          rx="21"
+          fill="url(#goldVertical)"
+          stroke="#fff2a2"
+          stroke-width="5"/>
+
+    <!-- Top housing -->
+    <path d="M161 181
+             L192 151
+             L258 151
+             L291 181 Z"
+          fill="#efa400"
+          stroke="#ffd700"
+          stroke-width="3"/>
+
+    <!-- Body inner panel -->
+    <rect x="150" y="205" width="194" height="91"
+          rx="12"
+          fill="#e9a000"
+          opacity=".38"/>
+
+    <!-- Body highlight -->
+    <path d="M150 201 H339"
+          fill="none"
+          stroke="#fffbd0"
+          stroke-width="7"
+          stroke-linecap="round"
+          opacity=".6"/>
+
+    <!-- Lens housing -->
+    <rect x="354" y="215" width="25" height="72"
+          rx="8"
+          fill="#d98e00"/>
+
+    <!-- Camera lens -->
+    <path d="M375 207
+             L442 177
+             L442 325
+             L375 294 Z"
+          fill="url(#gold)"
+          stroke="#fff2a2"
+          stroke-width="5"/>
+
+    <path d="M425 209 L425 294"
+          stroke="#e49a00"
+          stroke-width="9"
+          stroke-linecap="round"
+          opacity=".6"/>
+
+    <!-- Lens highlight -->
+    <path d="M388 214 L429 195"
+          stroke="#fffbd0"
+          stroke-width="5"
+          stroke-linecap="round"
+          opacity=".55"/>
+  </g>
+
+  <!-- Film strip loop -->
+  <g fill="none"
+     stroke="url(#film)"
+     stroke-width="31"
+     stroke-linecap="round"
+     filter="url(#shadow)">
+    <path d="M91 316
+             C80 376 128 417 196 425
+             C277 435 362 408 400 351"/>
+  </g>
+
+  <!-- Film perforations -->
+  <g fill="#0a1628">
+    <circle cx="102" cy="340" r="8"/>
+    <circle cx="119" cy="373" r="8"/>
+    <circle cx="144" cy="397" r="8"/>
+    <circle cx="176" cy="412" r="8"/>
+    <circle cx="211" cy="418" r="8"/>
+    <circle cx="248" cy="418" r="8"/>
+    <circle cx="285" cy="412" r="8"/>
+    <circle cx="320" cy="400" r="8"/>
+    <circle cx="350" cy="382" r="8"/>
+    <circle cx="377" cy="358" r="8"/>
+  </g>
+
+  <!-- Tripod -->
+  <g fill="url(#gold)" filter="url(#shadow)">
+    <path d="M247 319
+             L266 319
+             L229 414
+             L212 414 Z"/>
+
+    <path d="M264 319
+             L283 319
+             L324 414
+             L307 414 Z"/>
+
+    <path d="M253 319
+             L273 319
+             L270 414
+             L254 414 Z"/>
+  </g>
+
+  <!-- Tripod head -->
+  <circle cx="264" cy="326" r="16"
+          fill="#ffd700"
+          stroke="#fff3a0"
+          stroke-width="5"/>
+
+  <!-- Logo separator -->
+  <path d="M91 456 H172"
+        stroke="#ffd700"
+        stroke-width="5"
+        stroke-linecap="round"
+        opacity=".85"/>
+
+  <path d="M340 456 H421"
+        stroke="#ffd700"
+        stroke-width="5"
+        stroke-linecap="round"
+        opacity=".85"/>
+
+  <!-- Persian brand name -->
+  <text x="256" y="470"
+        text-anchor="middle"
+        direction="rtl"
+        unicode-bidi="bidi-override"
+        font-family="Vazirmatn, Tahoma, Arial, sans-serif"
+        font-size="48"
+        font-weight="700"
+        fill="url(#gold)"
+        filter="url(#textGlow)">سینما</text>
+
+  <!-- Tiny golden spark -->
+  <g fill="#fff5a6" filter="url(#softGlow)">
+    <path d="M430 111 L434 124 L447 128 L434 132 L430 145 L426 132 L413 128 L426 124 Z"/>
+  </g>
+</svg>

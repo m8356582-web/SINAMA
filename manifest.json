@@ -1,0 +1,55 @@
+﻿{
+  "name": "سینما | رزرو آنلاین بلیط",
+  "short_name": "سینما",
+  "description": "رزرو آنلاین بلیط سینما با تخفیف ویژه، QR کد و امکانات مدرن",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1628",
+  "theme_color": "#ffd700",
+  "lang": "fa",
+  "dir": "rtl",
+  "categories": [ "entertainment", "lifestyle" ],
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "فیلم‌ها",
+      "short_name": "فیلم‌ها",
+      "description": "مشاهده همه فیلم‌ها",
+      "url": "./index.html#movies",
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "پروفایل من",
+      "short_name": "پروفایل",
+      "description": "مشاهده رزروها و پروفایل",
+      "url": "./index.html#profile",
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}

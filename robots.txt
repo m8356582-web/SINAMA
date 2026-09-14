@@ -1,0 +1,24 @@
+﻿# ============================================
+# robots.txt - راهنمای ربات‌های موتور جستجو
+# ============================================
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /docs/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+Sitemap: https://m8356582-web.github.io/SINAMA/sitemap.xml
+Crawl-delay: 1

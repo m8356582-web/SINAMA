@@ -1,0 +1,682 @@
+﻿/* ============================================
+   RESPONSIVE - طراحی واکنش‌گرا
+   ============================================ */
+
+/* ===== تبلت بزرگ (max 1024px) ===== */
+@media (max-width: 1024px) {
+    .container {
+        padding: 15px;
+    }
+
+    .glass {
+        padding: 24px;
+    }
+
+    .movie-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 18px;
+    }
+
+    .glass-title {
+        font-size: 20px;
+    }
+
+    .featured-card {
+        min-width: 240px;
+    }
+
+    .compare-panel {
+        left: 10px;
+        right: 10px;
+    }
+}
+
+/* ===== تبلت (max 768px) ===== */
+@media (max-width: 768px) {
+    header .container {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .logo {
+        font-size: 22px;
+    }
+
+    .nav-links {
+        justify-content: center;
+        width: 100%;
+    }
+
+        .nav-links a {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+    .header-actions {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .movie-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .movie-card {
+        padding: 22px 16px;
+    }
+
+        .movie-card h3 {
+            font-size: 16px;
+        }
+
+        .movie-card .icon {
+            font-size: 42px;
+        }
+
+        .movie-card .price {
+            font-size: 18px;
+        }
+
+    .stats-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 18px 12px;
+    }
+
+        .stat-card i {
+            font-size: 28px;
+        }
+
+        .stat-card .number {
+            font-size: 24px;
+        }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .glass {
+        padding: 20px;
+        border-radius: 22px;
+        margin-bottom: 20px;
+    }
+
+    .glass-title {
+        font-size: 18px;
+        margin-bottom: 18px;
+    }
+
+    .modal {
+        padding: 28px 22px;
+        border-radius: 24px;
+    }
+
+        .modal h2 {
+            font-size: 20px;
+            margin-bottom: 22px;
+        }
+
+    /* جدول‌ها */
+    .table-wrap {
+        border-radius: 12px;
+    }
+
+    table {
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 10px 8px;
+    }
+
+    /* اسکنر */
+    .scan-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        bottom: 20px;
+        left: 20px;
+    }
+
+    /* مقایسه */
+    .compare-panel {
+        bottom: 10px;
+        padding: 15px;
+    }
+
+    .compare-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    /* انتخابی صندلی */
+    .seat {
+        width: 24px;
+        height: 24px;
+        font-size: 9px;
+    }
+
+    /* اسلایدر */
+    .slider-slide {
+        padding: 20px;
+    }
+
+    .slider-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 12px;
+    }
+
+    /* چت */
+    .chat-container {
+        height: 350px;
+    }
+
+    /* پودیوم */
+    .podium {
+        gap: 10px;
+    }
+
+    .podium-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .podium-item.first .podium-avatar {
+        width: 75px;
+        height: 75px;
+        font-size: 30px;
+    }
+
+    /* کارت‌های ویژه */
+    .feature-card i {
+        font-size: 26px;
+    }
+
+    /* شمارش معکوس */
+    .countdown-large .item {
+        padding: 10px 12px;
+        min-width: 55px;
+    }
+
+    .countdown-large .num {
+        font-size: 20px;
+    }
+}
+
+/* ===== موبایل (max 480px) ===== */
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+    }
+
+    header {
+        padding: 10px 0;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .nav-links a {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    .user-badge {
+        padding: 5px 12px;
+        font-size: 11px;
+    }
+
+    .btn {
+        padding: 9px 18px;
+        font-size: 12px;
+    }
+
+    .btn-sm {
+        padding: 6px 14px;
+        font-size: 11px;
+    }
+
+    .btn-xs {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+
+    .glass {
+        padding: 16px;
+        border-radius: 18px;
+        margin-bottom: 16px;
+    }
+
+    .glass-title {
+        font-size: 16px;
+        margin-bottom: 14px;
+        gap: 10px;
+    }
+
+        .glass-title i {
+            font-size: 16px;
+        }
+
+    .movie-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .movie-card {
+        padding: 20px 15px;
+    }
+
+        .movie-card .icon {
+            font-size: 38px;
+        }
+
+        .movie-card h3 {
+            font-size: 15px;
+        }
+
+        .movie-card .badge {
+            font-size: 11px;
+            padding: 4px 14px;
+        }
+
+        .movie-card .price {
+            font-size: 16px;
+        }
+
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 15px 10px;
+    }
+
+        .stat-card i {
+            font-size: 24px;
+        }
+
+        .stat-card .number {
+            font-size: 22px;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+        }
+
+    .modal {
+        padding: 22px 16px;
+        border-radius: 20px;
+        max-height: 95vh;
+    }
+
+        .modal h2 {
+            font-size: 18px;
+            margin-bottom: 18px;
+        }
+
+        .modal .close-btn {
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            top: 12px;
+            left: 14px;
+        }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+        .form-group label {
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 11px 14px;
+            font-size: 13px;
+            border-radius: 12px;
+        }
+
+    .passenger-box {
+        padding: 14px;
+    }
+
+        .passenger-box .passenger-title {
+            font-size: 13px;
+        }
+
+    /* جدول‌ها */
+    table {
+        font-size: 11px;
+    }
+
+    th, td {
+        padding: 8px 6px;
+    }
+
+    .table-actions {
+        gap: 3px;
+    }
+
+    /* کارت‌های ویژه */
+    .feature-card {
+        padding: 15px;
+    }
+
+        .feature-card i {
+            font-size: 22px;
+        }
+
+        .feature-card h4 {
+            font-size: 12px;
+        }
+
+        .feature-card p {
+            font-size: 10px;
+        }
+
+    /* اسکنر */
+    .scan-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+        bottom: 15px;
+        left: 15px;
+    }
+
+    /* مقایسه */
+    .compare-panel {
+        bottom: 5px;
+        left: 5px;
+        right: 5px;
+        padding: 12px;
+        border-radius: 16px;
+    }
+
+    .compare-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .compare-item {
+        padding: 10px;
+    }
+
+    /* صندلی */
+    .seat {
+        width: 20px;
+        height: 20px;
+        font-size: 8px;
+        border-radius: 4px;
+    }
+
+    .seat-row {
+        gap: 4px;
+        margin-bottom: 4px;
+    }
+
+    .seat-map {
+        padding: 20px 10px;
+    }
+
+    /* اسلایدر */
+    .slider-slide {
+        padding: 15px;
+    }
+
+    .slider-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+
+    /* چت */
+    .chat-container {
+        height: 300px;
+    }
+
+    .chat-message {
+        font-size: 12px;
+        padding: 8px 12px;
+        max-width: 85%;
+    }
+
+    /* پودیوم */
+    .podium {
+        gap: 5px;
+    }
+
+    .podium-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .podium-item.first .podium-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .podium-name {
+        font-size: 12px;
+    }
+
+    .podium-points {
+        font-size: 11px;
+    }
+
+    /* شمارش معکوس */
+    .countdown-large {
+        gap: 6px;
+    }
+
+        .countdown-large .item {
+            padding: 8px 10px;
+            min-width: 45px;
+            border-radius: 10px;
+        }
+
+        .countdown-large .num {
+            font-size: 16px;
+        }
+
+        .countdown-large .lbl {
+            font-size: 9px;
+        }
+
+    /* کارت‌های کاربر */
+    .top-user-card {
+        padding: 15px;
+    }
+
+    .top-user-avatar {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+
+    /* لیست watchlist */
+    .watchlist-item {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .watchlist-poster {
+        width: 60px;
+        height: 85px;
+    }
+
+        .watchlist-poster i {
+            font-size: 24px;
+        }
+
+    .watchlist-info h4 {
+        font-size: 14px;
+    }
+
+    .watchlist-info .meta {
+        font-size: 11px;
+    }
+
+    /* توست */
+    .toast-container {
+        bottom: 15px;
+        right: 15px;
+        left: 15px;
+    }
+
+    .toast {
+        padding: 12px 20px;
+        font-size: 12px;
+    }
+
+    /* اسلایدر فیلم‌های ویژه */
+    .featured-card {
+        min-width: 200px;
+        padding: 18px;
+    }
+
+    /* کارت تخفیف */
+    .discount-code {
+        font-size: 16px;
+        letter-spacing: 2px;
+        padding: 8px;
+    }
+
+    /* کارت box */
+    .card-box {
+        padding: 14px;
+    }
+
+        .card-box p {
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+    /* استار */
+    .rating-star {
+        font-size: 26px;
+        margin: 0 2px;
+    }
+}
+
+/* ===== موبایل کوچک (max 360px) ===== */
+@media (max-width: 360px) {
+    .logo {
+        font-size: 18px;
+    }
+
+    .nav-links a {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .glass-title {
+        font-size: 15px;
+    }
+
+    .movie-card {
+        padding: 15px 12px;
+    }
+
+        .movie-card h3 {
+            font-size: 14px;
+        }
+
+    .btn {
+        padding: 8px 14px;
+        font-size: 11px;
+    }
+
+    .seat {
+        width: 18px;
+        height: 18px;
+        font-size: 7px;
+    }
+}
+
+/* ===== چاپ (Print) ===== */
+@media print {
+    header,
+    footer,
+    .scan-btn,
+    .compare-panel,
+    .notif-btn,
+    .nav-links,
+    .btn:not(.print-btn) {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .glass {
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+
+    .modal-overlay {
+        position: static !important;
+        background: #fff !important;
+        display: block !important;
+    }
+
+    .modal {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+    }
+
+    #ticketContent {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    #qrcode img {
+        filter: invert(0) !important;
+    }
+}
+
+/* ===== حالت افقی موبایل ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+    .modal {
+        max-height: 95vh;
+        padding: 15px 20px;
+    }
+
+        .modal h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+}
+
+/* ===== تم‌های روشن ===== */
+@media (prefers-color-scheme: light) {
+    /* فقط اگه کاربر می‌خواد، روشن بشه */
+}
+
+/* ===== حالت کاهش حرکت ===== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

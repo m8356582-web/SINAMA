@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#163554"/>
+      <stop offset="50%" stop-color="#0d2038"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff8b5"/>
+      <stop offset="28%" stop-color="#ffd700"/>
+      <stop offset="70%" stop-color="#ffc000"/>
+      <stop offset="100%" stop-color="#f0a500"/>
+    </linearGradient>
+
+    <linearGradient id="film" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f0a500"/>
+      <stop offset="50%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#f0a500"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="7" stdDeviation="7"
+                    flood-color="#000" flood-opacity=".65"/>
+    </filter>
+
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="192" height="192" rx="38" fill="url(#bg)"/>
+
+  <!-- Border -->
+  <rect x="3" y="3" width="186" height="186" rx="35"
+        fill="none" stroke="#28649d" stroke-width="3"/>
+
+  <!-- Film reel -->
+  <g filter="url(#shadow)">
+    <circle cx="69" cy="53" r="25" fill="url(#gold)"/>
+    <circle cx="69" cy="53" r="19" fill="#eaa000"/>
+
+    <g fill="#0a1628">
+      <circle cx="69" cy="41" r="4.5"/>
+      <circle cx="80" cy="48" r="4.5"/>
+      <circle cx="76" cy="61" r="4.5"/>
+      <circle cx="62" cy="64" r="4.5"/>
+      <circle cx="58" cy="49" r="4.5"/>
+    </g>
+
+    <circle cx="69" cy="53" r="4" fill="#ffd700"/>
+  </g>
+
+  <!-- Second reel -->
+  <g filter="url(#shadow)">
+    <circle cx="101" cy="43" r="29" fill="url(#gold)"/>
+    <circle cx="101" cy="43" r="22" fill="#e9a000"/>
+
+    <g fill="#0a1628">
+      <circle cx="101" cy="29" r="5"/>
+      <circle cx="114" cy="36" r="5"/>
+      <circle cx="111" cy="51" r="5"/>
+      <circle cx="95" cy="56" r="5"/>
+      <circle cx="87" cy="41" r="5"/>
+    </g>
+
+    <circle cx="101" cy="43" r="4.5" fill="#ffd700"/>
+  </g>
+
+  <!-- Cinema camera -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="72" width="91" height="55" rx="9"
+          fill="url(#gold)" stroke="#fff3a0" stroke-width="2"/>
+
+    <path d="M62 72 L74 61 L98 61 L110 72 Z"
+          fill="#f0a500"/>
+
+    <!-- Lens -->
+    <path d="M139 82 L166 69 L166 119 L139 107 Z"
+          fill="url(#gold)" stroke="#fff3a0" stroke-width="2"/>
+
+    <rect x="134" y="84" width="9" height="28" rx="3"
+          fill="#d99100"/>
+
+    <path d="M57 81 H128"
+          stroke="#fff8bd" stroke-width="3"
+          stroke-linecap="round" opacity=".65"/>
+  </g>
+
+  <!-- Film strip -->
+  <g fill="none" stroke="url(#film)" stroke-width="10"
+     stroke-linecap="round" filter="url(#shadow)">
+    <path d="M31 124
+             C30 147 50 163 77 164
+             C111 165 137 151 144 133"/>
+  </g>
+
+  <!-- Film strip holes -->
+  <g fill="#0a1628">
+    <circle cx="38" cy="137" r="3"/>
+    <circle cx="48" cy="148" r="3"/>
+    <circle cx="61" cy="155" r="3"/>
+    <circle cx="76" cy="158" r="3"/>
+    <circle cx="92" cy="157" r="3"/>
+    <circle cx="108" cy="153" r="3"/>
+    <circle cx="123" cy="146" r="3"/>
+    <circle cx="136" cy="136" r="3"/>
+  </g>
+
+  <!-- Camera tripod -->
+  <g fill="url(#gold)" filter="url(#shadow)">
+    <path d="M89 127 L98 127 L82 162 L75 162 Z"/>
+    <path d="M97 127 L106 127 L121 162 L114 162 Z"/>
+    <path d="M93 127 L102 127 L101 162 L94 162 Z"/>
+  </g>
+
+  <circle cx="97" cy="130" r="6"
+          fill="#ffd700" stroke="#fff3a0" stroke-width="2"/>
+
+  <!-- Small glow -->
+  <circle cx="101" cy="43" r="3"
+          fill="#fffbd5" filter="url(#glow)"/>
+</svg>

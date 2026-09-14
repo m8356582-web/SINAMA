@@ -1,0 +1,31 @@
+{
+  "name": "cinema-booking-system",
+  "version": "1.0.0",
+  "description": "سیستم رزرو آنلاین بلیط سینما با QR Code، نظرات، علاقه‌مندی‌ها و امکانات مدرن",
+  "main": "index.html",
+  "homepage": "https://m8356582-web.github.io/SINAMA/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/m8356582-web/SINAMA.git"
+  },
+  "scripts": {
+    "start": "live-server --port=3000 --open=index.html",
+    "dev": "live-server --port=3000 --open=index.html"
+  },
+  "keywords": [
+    "cinema",
+    "booking",
+    "movie",
+    "ticket",
+    "سینما",
+    "رزرو",
+    "بلیط",
+    "qr-code",
+    "pwa"
+  ],
+  "author": "Cinema Team",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
