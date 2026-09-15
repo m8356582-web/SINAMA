@@ -1,82 +1,114 @@
-﻿/* ============================================
+/* ============================================
    EXTRA - قابلیت‌های اضافی
    ============================================ */
 
 // ============================================
 // 1. QR SCANNER
 // ============================================
-window.openScanner = function () {
+window.openScanner = function() {
     if (!user) { toast('⚠️ لطفاً وارد شوید', 'error'); return; }
     if (role !== 'admin1' && role !== 'admin2') {
         toast('❌ فقط ادمین‌ها دسترسی دارند', 'error');
         return;
     }
-
+    
     openModal('scannerModal');
-
-    setTimeout(function () {
+    
+    setTimeout(function() {
         if (typeof Html5Qrcode !== 'undefined') {
             html5QrCode = new Html5Qrcode("qr-reader");
             html5QrCode.start(
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 250, height: 250 } },
-                async function (decodedText) {
+                async function(decodedText) {
+                    console.log('📱 QR اسکن شد:', decodedText);
+                    
+                    var bookingCode = '';
+                    
+                    // حالت 1: JSON
                     try {
                         var data = JSON.parse(decodedText);
-                        var bookings = await getBookings();
-                        var booking = bookings.find(function (b) { return b.booking_code === data.code; });
-
-                        var resultDiv = document.getElementById('scanResult');
-
-                        if (booking) {
-                            // بررسی حضور قبلی
-                            var atts = await getAttendances();
-                            var existing = atts.find(function (x) { return x.booking_id === booking.id; });
-
-                            if (existing) {
-                                resultDiv.innerHTML = '<div style="padding:20px;background:rgba(255,215,0,.15);border-radius:16px;border:2px solid #ffd700;text-align:center;">' +
+                        bookingCode = data.code || data.booking_code || '';
+                    } catch(e) {
+                        // حالت 2: متن ساده
+                        bookingCode = decodedText.trim();
+                    }
+                    
+                    console.log('🔍 کد بلیط:', bookingCode);
+                    
+                    var resultDiv = document.getElementById('scanResult');
+                    
+                    if (!bookingCode) {
+                        resultDiv.innerHTML = 
+                            '<div style="padding:20px;background:rgba(248,113,113,.15);border-radius:16px;border:2px solid #f87171;text-align:center;">' +
+                                '<i class="fas fa-times-circle" style="font-size:48px;color:#f87171;margin-bottom:15px;display:block;"></i>' +
+                                '<h3 style="color:#f87171;">❌ کد خالی</h3>' +
+                            '</div>';
+                        return;
+                    }
+                    
+                    var bookings = await getBookings();
+                    var booking = bookings.find(function(b) { return b.booking_code === bookingCode; });
+                    
+                    if (booking) {
+                        var atts = await getAttendances();
+                        var existing = atts.find(function(x) { return x.booking_id === booking.id; });
+                        
+                        if (existing) {
+                            resultDiv.innerHTML = 
+                                '<div style="padding:20px;background:rgba(255,215,0,.15);border-radius:16px;border:2px solid #ffd700;text-align:center;">' +
                                     '<i class="fas fa-exclamation-triangle" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i>' +
                                     '<h3 style="color:#ffd700;margin-bottom:10px;">⚠️ قبلاً ثبت شده</h3>' +
-                                    '<p style="font-size:14px;">این بلیط قبلاً اسکن شده است</p>' +
-                                    '</div>';
-                            } else {
-                                resultDiv.innerHTML = '<div style="padding:20px;background:rgba(74,222,128,.15);border-radius:16px;border:2px solid #4ade80;text-align:center;">' +
+                                    '<p style="font-size:14px;">کد: ' + booking.booking_code + '</p>' +
+                                    '<p style="font-size:12px;opacity:0.7;margin-top:5px;">این بلیط قبلاً اسکن شده</p>' +
+                                '</div>';
+                        } else {
+                            resultDiv.innerHTML = 
+                                '<div style="padding:20px;background:rgba(74,222,128,.15);border-radius:16px;border:2px solid #4ade80;text-align:center;">' +
                                     '<i class="fas fa-check-circle" style="font-size:48px;color:#4ade80;margin-bottom:15px;display:block;"></i>' +
                                     '<h3 style="color:#4ade80;margin-bottom:10px;">✅ بلیط معتبر</h3>' +
                                     '<p style="font-size:14px;margin:5px 0;">کد: ' + booking.booking_code + '</p>' +
                                     '<p style="font-size:14px;margin:5px 0;">تعداد: ' + booking.ticket_count + ' نفر</p>' +
                                     '<button class="btn btn-success" onclick="scanCheckIn(\'' + booking.id + '\')" style="margin-top:15px;">' +
-                                    '<i class="fas fa-user-check"></i> ثبت حضور' +
+                                        '<i class="fas fa-user-check"></i> ثبت حضور' +
                                     '</button>' +
-                                    '</div>';
-                            }
-                        } else {
-                            resultDiv.innerHTML = '<div style="padding:20px;background:rgba(248,113,113,.15);border-radius:16px;border:2px solid #f87171;text-align:center;">' +
-                                '<i class="fas fa-times-circle" style="font-size:48px;color:#f87171;margin-bottom:15px;display:block;"></i>' +
-                                '<h3 style="color:#f87171;">❌ بلیط نامعتبر</h3>' +
                                 '</div>';
                         }
-                        html5QrCode.stop();
-                    } catch (e) {
-                        document.getElementById('scanResult').innerHTML =
-                            '<p style="color:#f87171;text-align:center;">QR نامعتبر</p>';
+                        
+                        if (html5QrCode) {
+                            html5QrCode.stop().catch(function() {});
+                            html5QrCode = null;
+                        }
+                    } else {
+                        resultDiv.innerHTML = 
+                            '<div style="padding:20px;background:rgba(248,113,113,.15);border-radius:16px;border:2px solid #f87171;text-align:center;">' +
+                                '<i class="fas fa-times-circle" style="font-size:48px;color:#f87171;margin-bottom:15px;display:block;"></i>' +
+                                '<h3 style="color:#f87171;margin-bottom:10px;">❌ بلیط نامعتبر</h3>' +
+                                '<p style="font-size:12px;opacity:0.7;">کد اسکن شده: ' + bookingCode + '</p>' +
+                            '</div>';
                     }
                 },
-                function (errorMessage) { }
-            ).catch(function (err) {
-                document.getElementById('qr-reader').innerHTML =
-                    '<p style="text-align:center;color:#f87171;padding:20px;">خطا در دسترسی به دوربین</p>';
+                function(errorMessage) {}
+            ).catch(function(err) {
+                var qrReader = document.getElementById('qr-reader');
+                if (qrReader) {
+                    qrReader.innerHTML = 
+                        '<p style="text-align:center;color:#f87171;padding:20px;">خطا در دسترسی به دوربین</p>';
+                }
             });
         } else {
-            document.getElementById('qr-reader').innerHTML =
-                '<p style="text-align:center;color:#f87171;padding:20px;">کتابخانه اسکنر لود نشده</p>';
+            var qrReader = document.getElementById('qr-reader');
+            if (qrReader) {
+                qrReader.innerHTML = 
+                    '<p style="text-align:center;color:#f87171;padding:20px;">کتابخانه اسکنر لود نشده</p>';
+            }
         }
     }, 300);
 };
 
-window.closeScanner = function () {
+window.closeScanner = function() {
     if (html5QrCode) {
-        html5QrCode.stop().catch(function () { });
+        html5QrCode.stop().catch(function() {});
         html5QrCode = null;
     }
     closeModal('scannerModal');
@@ -84,25 +116,25 @@ window.closeScanner = function () {
     if (resultDiv) resultDiv.innerHTML = '';
 };
 
-window.scanCheckIn = async function (bookingId) {
+window.scanCheckIn = async function(bookingId) {
     try {
         await checkIn(bookingId);
         closeScanner();
-    } catch (e) { toast('❌ ' + e.message, 'error'); }
+    } catch(e) { toast('❌ ' + e.message, 'error'); }
 };
 
 // ============================================
 // 2. WATCHLIST (تماشای بعدی)
 // ============================================
 async function getWatchlist(userId) {
-    if (mock) return mockWatchlist.filter(function (w) { return w.user_id === userId; });
+    if (mock) return mockWatchlist.filter(function(w) { return w.user_id === userId; });
     var { data } = await supabase.from('watchlist').select('*').eq('user_id', userId);
     return data || [];
 }
 
 async function addToWatchlist(userId, movieId) {
     if (mock) {
-        if (!mockWatchlist.find(function (w) { return w.user_id === userId && w.movie_id === movieId; })) {
+        if (!mockWatchlist.find(function(w) { return w.user_id === userId && w.movie_id === movieId; })) {
             mockWatchlist.push({ id: 'w' + (mockWatchlist.length + 1), user_id: userId, movie_id: movieId });
         }
         return;
@@ -112,19 +144,19 @@ async function addToWatchlist(userId, movieId) {
 
 async function removeFromWatchlist(userId, movieId) {
     if (mock) {
-        var idx = mockWatchlist.findIndex(function (w) { return w.user_id === userId && w.movie_id === movieId; });
+        var idx = mockWatchlist.findIndex(function(w) { return w.user_id === userId && w.movie_id === movieId; });
         if (idx !== -1) mockWatchlist.splice(idx, 1);
         return;
     }
     await supabase.from('watchlist').delete().eq('user_id', userId).eq('movie_id', movieId);
 }
 
-window.toggleWatchlist = async function (movieId, btn) {
+window.toggleWatchlist = async function(movieId, btn) {
     if (!user) { toast('⚠️ لطفاً وارد شوید', 'error'); return; }
     try {
         var watchlist = await getWatchlist(user.id);
-        var exists = watchlist.some(function (w) { return w.movie_id === movieId; });
-
+        var exists = watchlist.some(function(w) { return w.movie_id === movieId; });
+        
         if (exists) {
             await removeFromWatchlist(user.id, movieId);
             if (btn) {
@@ -140,57 +172,57 @@ window.toggleWatchlist = async function (movieId, btn) {
             }
             toast('✅ به لیست اضافه شد', 'success');
         }
-    } catch (e) { toast('❌ ' + e.message, 'error'); }
+    } catch(e) { toast('❌ ' + e.message, 'error'); }
 };
 
 async function loadWatchlist() {
     if (!user) return;
     var container = document.getElementById('watchlistMovies');
     if (!container) return;
-
+    
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
+    
     var watchlist = await getWatchlist(user.id);
     if (watchlist.length === 0) {
         container.innerHTML = '<p style="text-align:center;padding:40px;opacity:0.5;">' +
             '🎬 هنوز فیلمی به لیست اضافه نکرده‌اید</p>';
         return;
     }
-
+    
     var movies = await getMovies();
     var html = '';
-
-    watchlist.forEach(function (w) {
-        var m = movies.find(function (x) { return x.id === w.movie_id; });
+    
+    watchlist.forEach(function(w) {
+        var m = movies.find(function(x) { return x.id === w.movie_id; });
         if (!m) return;
-
+        
         var date = toPersian(m.release_date);
         var statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
-
+        
         html += '<div class="watchlist-item">' +
             '<div class="watchlist-poster"><i class="fas fa-film"></i></div>' +
             '<div class="watchlist-info">' +
-            '<h4>' + m.name + '</h4>' +
-            '<div class="meta">📅 ' + date + ' • ' + (statusMap[m.status] || m.status) + '</div>' +
-            '<div class="meta">💰 ' + formatCurrency(m.price) + ' تومان</div>' +
-            '<div style="display:flex;gap:8px;margin-top:10px;">' +
-            (m.status === 'now_showing' ?
-                '<button class="btn btn-primary btn-xs" onclick="openBooking(\'' + m.id + '\')">' +
-                '<i class="fas fa-ticket-alt"></i> رزرو</button>' : '') +
-            '<button class="btn btn-danger btn-xs" onclick="toggleWatchlist(\'' + m.id + '\'); loadWatchlist();">' +
-            '<i class="fas fa-trash"></i> حذف</button>' +
+                '<h4>' + m.name + '</h4>' +
+                '<div class="meta">📅 ' + date + ' • ' + (statusMap[m.status] || m.status) + '</div>' +
+                '<div class="meta">💰 ' + formatCurrency(m.price) + ' تومان</div>' +
+                '<div style="display:flex;gap:8px;margin-top:10px;">' +
+                    (m.status === 'now_showing' ? 
+                        '<button class="btn btn-primary btn-xs" onclick="openBooking(\'' + m.id + '\')">' +
+                            '<i class="fas fa-ticket-alt"></i> رزرو</button>' : '') +
+                    '<button class="btn btn-danger btn-xs" onclick="toggleWatchlist(\'' + m.id + '\'); loadWatchlist();">' +
+                        '<i class="fas fa-trash"></i> حذف</button>' +
+                '</div>' +
             '</div>' +
-            '</div>' +
-            '</div>';
+        '</div>';
     });
-
+    
     container.innerHTML = html || '<p style="text-align:center;padding:40px;opacity:0.5;">لیست خالی است</p>';
 }
 
 // ============================================
 // 3. COMPARE
 // ============================================
-window.toggleCompare = function (movieId, movieName) {
+window.toggleCompare = function(movieId, movieName) {
     var idx = compareList.indexOf(movieId);
     if (idx !== -1) {
         compareList.splice(idx, 1);
@@ -204,27 +236,27 @@ window.toggleCompare = function (movieId, movieName) {
     updateComparePanel();
 };
 
-window.updateComparePanel = async function () {
+window.updateComparePanel = async function() {
     var panel = document.getElementById('comparePanel');
     var grid = document.getElementById('compareGrid');
     if (!panel || !grid) return;
-
+    
     if (compareList.length < 2) {
         panel.classList.remove('show');
         return;
     }
-
+    
     panel.classList.add('show');
     var movies = await getMovies();
     var html = '';
-
-    compareList.forEach(function (id) {
-        var m = movies.find(function (x) { return x.id === id; });
+    
+    compareList.forEach(function(id) {
+        var m = movies.find(function(x) { return x.id === id; });
         if (!m) return;
-
+        
         var date = toPersian(m.release_date);
         var statusMap = { 'now_showing': 'در حال اکران', 'coming_soon': 'به زودی', 'ended': 'پایان یافته' };
-
+        
         html += '<div class="compare-item">' +
             '<div style="font-size:32px;color:#ffd700;margin-bottom:10px;"><i class="fas fa-film"></i></div>' +
             '<h4 style="margin-bottom:10px;color:#ffd700;">' + m.name + '</h4>' +
@@ -233,17 +265,17 @@ window.updateComparePanel = async function () {
             '<div style="font-size:12px;opacity:0.7;margin-bottom:6px;">📊 ' + (statusMap[m.status] || m.status) + '</div>' +
             (m.duration ? '<div style="font-size:12px;opacity:0.7;margin-bottom:6px;">⏱️ ' + m.duration + ' دقیقه</div>' : '') +
             (m.imdb_rating ? '<div style="font-size:12px;opacity:0.7;margin-bottom:6px;">⭐ IMDB: ' + m.imdb_rating + '</div>' : '') +
-            '<div style="font-size:16px;font-weight:700;color:#ffd700;margin-top:10px;">' +
-            formatCurrency(m.price) + ' تومان</div>' +
-            '</div>';
+            '<div style="font-size:16px;font-weight:700;color:#ffd700;margin-top:10px;">' + 
+                formatCurrency(m.price) + ' تومان</div>' +
+        '</div>';
     });
-
+    
     grid.innerHTML = html;
 };
 
-window.clearCompare = function () {
+window.clearCompare = function() {
     compareList = [];
-    document.querySelectorAll('.compare-check').forEach(function (cb) { cb.checked = false; });
+    document.querySelectorAll('.compare-check').forEach(function(cb) { cb.checked = false; });
     updateComparePanel();
     toast('مقایسه بسته شد', 'info');
 };
@@ -254,71 +286,69 @@ window.clearCompare = function () {
 async function loadLeaderboard() {
     var container = document.getElementById('leaderboardContent');
     if (!container) return;
-
+    
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
+    
     var users = await getUsers();
     var topUsers = users
-        .filter(function (u) { return u.role === 'user' || u.role === 'admin2'; })
-        .sort(function (a, b) { return (b.total_points || 0) - (a.total_points || 0); })
+        .filter(function(u) { return u.role === 'user' || u.role === 'admin2'; })
+        .sort(function(a, b) { return (b.total_points || 0) - (a.total_points || 0); })
         .slice(0, 10);
-
+    
     if (topUsers.length === 0) {
         container.innerHTML = '<p style="text-align:center;padding:40px;opacity:0.5;">هنوز کاربری نیست</p>';
         return;
     }
-
+    
     var html = '';
-
-    // پودیوم (سه نفر اول)
+    
     if (topUsers.length >= 3) {
         html += '<div class="podium">';
-
+        
         if (topUsers[1]) {
             html += '<div class="podium-item second">' +
                 '<div class="podium-avatar">' + topUsers[1].first_name.charAt(0) + '</div>' +
                 '<div class="podium-name">' + topUsers[1].first_name + ' ' + topUsers[1].last_name + '</div>' +
                 '<div class="podium-points">🏆 ' + (topUsers[1].total_points || 0) + '</div>' +
-                '</div>';
+            '</div>';
         }
-
+        
         if (topUsers[0]) {
             html += '<div class="podium-item first">' +
                 '<div style="font-size:32px;margin-bottom:5px;">👑</div>' +
                 '<div class="podium-avatar">' + topUsers[0].first_name.charAt(0) + '</div>' +
                 '<div class="podium-name">' + topUsers[0].first_name + ' ' + topUsers[0].last_name + '</div>' +
                 '<div class="podium-points">🏆 ' + (topUsers[0].total_points || 0) + '</div>' +
-                '</div>';
+            '</div>';
         }
-
+        
         if (topUsers[2]) {
             html += '<div class="podium-item third">' +
                 '<div class="podium-avatar">' + topUsers[2].first_name.charAt(0) + '</div>' +
                 '<div class="podium-name">' + topUsers[2].first_name + ' ' + topUsers[2].last_name + '</div>' +
                 '<div class="podium-points">🏆 ' + (topUsers[2].total_points || 0) + '</div>' +
-                '</div>';
+            '</div>';
         }
-
+        
         html += '</div>';
     }
-
-    // بقیه لیست
+    
     html += '<div style="margin-top:30px;">';
-    topUsers.forEach(function (u, idx) {
+    topUsers.forEach(function(u, idx) {
         var rank = idx + 1;
         var rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
-
+        
         html += '<div class="leaderboard-item">' +
             '<div class="leaderboard-rank ' + rankClass + '">' + rank + '</div>' +
             '<div style="flex:1;">' +
-            '<div style="font-weight:700;">' + u.first_name + ' ' + u.last_name + '</div>' +
-            '<div style="font-size:12px;opacity:0.6;">' + u.phone + '</div>' +
+                '<div style="font-weight:700;">' + u.first_name + ' ' + u.last_name + '</div>' +
+                '<div style="font-size:12px;opacity:0.6;">' + u.phone + '</div>' +
             '</div>' +
             '<div class="points-badge">🏆 ' + (u.total_points || 0) + '</div>' +
-            '</div>';
+        '</div>';
     });
     html += '</div>';
-
+    
     container.innerHTML = html;
 }
 
@@ -326,7 +356,7 @@ async function loadLeaderboard() {
 // 5. CHAT
 // ============================================
 async function getChatMessages(userId) {
-    if (mock) return mockChatMessages.filter(function (m) { return m.user_id === userId; });
+    if (mock) return mockChatMessages.filter(function(m) { return m.user_id === userId; });
     var { data } = await supabase.from('chat_messages').select('*').eq('user_id', userId).order('created_at', { ascending: true });
     return data || [];
 }
@@ -343,54 +373,53 @@ async function insertChatMessage(msg) {
     return data;
 }
 
-window.openChat = async function () {
+window.openChat = async function() {
     if (!user) { toast('⚠️ وارد شوید', 'error'); return; }
-
+    
     currentChatUser = user.id;
     openModal('chatModal');
     await loadChatMessages();
-
-    // هر 5 ثانیه چک کن پیام جدید
+    
     if (chatInterval) clearInterval(chatInterval);
     chatInterval = setInterval(loadChatMessages, 5000);
 };
 
 async function loadChatMessages() {
     if (!currentChatUser) return;
-
+    
     var container = document.getElementById('chatMessages');
     if (!container) return;
-
+    
     var messages = await getChatMessages(currentChatUser);
-
+    
     if (messages.length === 0) {
         container.innerHTML = '<p style="text-align:center;padding:20px;opacity:0.5;">' +
             'هنوز پیامی نیست. اولین پیام را بفرستید!</p>';
         return;
     }
-
+    
     var html = '';
-    messages.forEach(function (m) {
+    messages.forEach(function(m) {
         var cls = m.sender === 'user' ? 'user' : 'admin';
         html += '<div class="chat-message ' + cls + '">' +
             '<div>' + m.message + '</div>' +
-            '<div style="font-size:10px;opacity:0.6;margin-top:4px;">' +
-            new Date(m.created_at).toLocaleTimeString('fa-IR') + '</div>' +
-            '</div>';
+            '<div style="font-size:10px;opacity:0.6;margin-top:4px;">' + 
+                new Date(m.created_at).toLocaleTimeString('fa-IR') + '</div>' +
+        '</div>';
     });
-
+    
     container.innerHTML = html;
     container.scrollTop = container.scrollHeight;
 }
 
-window.sendChatMessage = async function () {
+window.sendChatMessage = async function() {
     if (!user) return;
     var input = document.getElementById('chatInput');
     if (!input) return;
-
+    
     var message = input.value.trim();
     if (!message) return;
-
+    
     try {
         await insertChatMessage({
             user_id: user.id,
@@ -400,82 +429,78 @@ window.sendChatMessage = async function () {
         });
         input.value = '';
         await loadChatMessages();
-    } catch (e) { toast('❌ خطا: ' + e.message, 'error'); }
+    } catch(e) { toast('❌ خطا: ' + e.message, 'error'); }
 };
 
-// Admin: نمایش چت‌ها
 async function renderChatsAdmin(container) {
     if (role !== 'admin1' && role !== 'admin2') {
         container.innerHTML = '🔒';
         return;
     }
-
+    
     var allMessages = [];
     if (!mock) {
         var { data } = await supabase.from('chat_messages').select('*').order('created_at', { ascending: false });
         allMessages = data || [];
     }
-
-    // گروه‌بندی بر اساس کاربر
+    
     var users = {};
-    allMessages.forEach(function (m) {
+    allMessages.forEach(function(m) {
         if (!users[m.user_id]) users[m.user_id] = [];
         users[m.user_id].push(m);
     });
-
+    
     var usersList = await getUsers();
     var html = '<div class="glass-title" style="font-size:18px;">💬 چت‌های کاربران (' + Object.keys(users).length + ')</div>';
-
+    
     if (Object.keys(users).length === 0) {
         html += '<p style="text-align:center;padding:40px;opacity:0.5;">هیچ چتی وجود ندارد</p>';
         container.innerHTML = html;
         return;
     }
-
+    
     for (var userId in users) {
-        var u = usersList.find(function (x) { return x.id === userId; });
+        var u = usersList.find(function(x) { return x.id === userId; });
         var userName = u ? (u.first_name + ' ' + u.last_name) : 'کاربر';
         var msgs = users[userId];
         var lastMsg = msgs[0];
-        var unread = msgs.filter(function (m) { return !m.is_read && m.sender === 'user'; }).length;
-
+        var unread = msgs.filter(function(m) { return !m.is_read && m.sender === 'user'; }).length;
+        
         html += '<div class="info-panel" style="cursor:pointer;" onclick="openChatAsAdmin(\'' + userId + '\')">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-            '<div>' +
-            '<strong style="color:#ffd700;">' + userName + '</strong>' +
-            (unread > 0 ? '<span class="count-badge" style="margin-right:8px;">' + unread + '</span>' : '') +
+                '<div>' +
+                    '<strong style="color:#ffd700;">' + userName + '</strong>' +
+                    (unread > 0 ? '<span class="count-badge" style="margin-right:8px;">' + unread + '</span>' : '') +
+                '</div>' +
+                '<div style="font-size:12px;opacity:0.5;">' + 
+                    new Date(lastMsg.created_at).toLocaleString('fa-IR') + '</div>' +
             '</div>' +
-            '<div style="font-size:12px;opacity:0.5;">' +
-            new Date(lastMsg.created_at).toLocaleString('fa-IR') + '</div>' +
-            '</div>' +
-            '<div style="font-size:13px;opacity:0.7;margin-top:5px;">' +
-            lastMsg.message.substring(0, 60) + (lastMsg.message.length > 60 ? '...' : '') + '</div>' +
-            '</div>';
+            '<div style="font-size:13px;opacity:0.7;margin-top:5px;">' + 
+                lastMsg.message.substring(0, 60) + (lastMsg.message.length > 60 ? '...' : '') + '</div>' +
+        '</div>';
     }
-
+    
     container.innerHTML = html;
 }
 
-window.openChatAsAdmin = async function (userId) {
+window.openChatAsAdmin = async function(userId) {
     currentChatUser = userId;
     openModal('chatModal');
     await loadChatMessages();
-
+    
     if (chatInterval) clearInterval(chatInterval);
     chatInterval = setInterval(loadChatMessages, 5000);
-
-    // علامت‌گذاری به عنوان خوانده شده
+    
     if (!mock) {
         await supabase.from('chat_messages').update({ is_read: true }).eq('user_id', userId).eq('sender', 'user');
     }
 };
 
-// توقف چت هنگام بستن مودال
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     var chatModal = document.getElementById('chatModal');
     if (chatModal) {
-        var observer = new MutationObserver(function (mutations) {
-            mutations.forEach(function (m) {
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(m) {
                 if (!chatModal.classList.contains('active') && chatInterval) {
                     clearInterval(chatInterval);
                     chatInterval = null;
@@ -484,11 +509,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         observer.observe(chatModal, { attributes: true });
     }
-
-    // Enter برای ارسال پیام
+    
     var chatInput = document.getElementById('chatInput');
     if (chatInput) {
-        chatInput.addEventListener('keypress', function (e) {
+        chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 sendChatMessage();
@@ -509,8 +533,8 @@ async function getInvitationsByUser(userId) {
 async function showInviteStats() {
     if (!user) return;
     var invitations = await getInvitationsByUser(user.id);
-    var accepted = invitations.filter(function (i) { return i.status === 'accepted'; });
-
+    var accepted = invitations.filter(function(i) { return i.status === 'accepted'; });
+    
     return {
         total: invitations.length,
         accepted: accepted.length,
@@ -522,7 +546,7 @@ async function showInviteStats() {
 // 7. SHOWTIMES (جدول زمانی اکران)
 // ============================================
 async function getShowtimes(movieId) {
-    if (mock) return mockShowtimes.filter(function (s) { return s.movie_id === movieId; });
+    if (mock) return mockShowtimes.filter(function(s) { return s.movie_id === movieId; });
     var query = supabase.from('showtimes').select('*');
     if (movieId) query = query.eq('movie_id', movieId);
     var { data } = await query.order('show_date').order('show_time');
@@ -543,7 +567,7 @@ async function insertShowtime(data) {
 
 async function deleteShowtime(id) {
     if (mock) {
-        var idx = mockShowtimes.findIndex(function (s) { return s.id === id; });
+        var idx = mockShowtimes.findIndex(function(s) { return s.id === id; });
         if (idx !== -1) mockShowtimes.splice(idx, 1);
         return;
     }
@@ -553,90 +577,87 @@ async function deleteShowtime(id) {
 async function loadShowtimes() {
     var container = document.getElementById('showtimesContent');
     if (!container) return;
-
+    
     container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-
+    
     var showtimes = await getShowtimes();
     var movies = await getMovies();
-
+    
     if (showtimes.length === 0) {
         container.innerHTML = '<p style="text-align:center;padding:40px;opacity:0.5;">' +
             '📅 هنوز سانسی ثبت نشده است</p>';
         return;
     }
-
-    // گروه‌بندی بر اساس تاریخ
+    
     var grouped = {};
-    showtimes.forEach(function (s) {
+    showtimes.forEach(function(s) {
         var dateKey = s.show_date;
         if (!grouped[dateKey]) grouped[dateKey] = [];
         grouped[dateKey].push(s);
     });
-
+    
     var html = '';
     for (var date in grouped) {
         html += '<div style="margin-bottom:30px;">' +
             '<h3 style="color:#ffd700;margin-bottom:15px;">📅 ' + toPersian(date) + '</h3>' +
             '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">';
-
-        grouped[date].forEach(function (s) {
-            var m = movies.find(function (x) { return x.id === s.movie_id; });
+        
+        grouped[date].forEach(function(s) {
+            var m = movies.find(function(x) { return x.id === s.movie_id; });
             var movieName = m ? m.name : '-';
-
+            
             html += '<div class="showtime-card" onclick="openBooking(\'' + s.movie_id + '\')">' +
                 '<div style="font-size:12px;color:#ffd700;font-weight:700;margin-bottom:5px;">' + movieName + '</div>' +
                 '<div class="time">' + s.show_time.substring(0, 5) + '</div>' +
                 '<div class="hall">🎭 ' + (s.hall || 'سالن 1') + '</div>' +
                 '<div class="price">' + formatCurrency(s.price || (m ? m.price : 0)) + ' تومان</div>' +
-                '</div>';
+            '</div>';
         });
-
+        
         html += '</div></div>';
     }
-
+    
     container.innerHTML = html;
 }
 
 async function renderShowtimesAdmin(container) {
     if (role !== 'admin1') { container.innerHTML = '🔒'; return; }
-
+    
     var showtimes = await getShowtimes();
     var movies = await getMovies();
-
+    
     var html = '<div class="glass-title" style="font-size:18px;">📅 سانس‌ها (' + showtimes.length + ')</div>';
-
-    // فرم افزودن
+    
     html += '<div class="glass" style="margin-bottom:20px;">' +
         '<div class="glass-title" style="font-size:16px;">➕ افزودن سانس جدید</div>' +
         '<form id="addShowtimeForm">' +
         '<div class="form-row">' +
-        '<div class="form-group"><label>فیلم</label><select id="stMovie" required><option value="">انتخاب فیلم</option>';
-
-    movies.forEach(function (m) {
+            '<div class="form-group"><label>فیلم</label><select id="stMovie" required><option value="">انتخاب فیلم</option>';
+    
+    movies.forEach(function(m) {
         html += '<option value="' + m.id + '">' + m.name + '</option>';
     });
-
+    
     html += '</select></div>' +
         '<div class="form-group"><label>سالن</label><input type="text" id="stHall" placeholder="سالن 1" value="سالن 1"></div>' +
         '</div>' +
         '<div class="form-row">' +
-        '<div class="form-group"><label>تاریخ (میلادی)</label><input type="date" id="stDate" required></div>' +
-        '<div class="form-group"><label>ساعت</label><input type="time" id="stTime" required></div>' +
+            '<div class="form-group"><label>تاریخ (میلادی)</label><input type="date" id="stDate" required></div>' +
+            '<div class="form-group"><label>ساعت</label><input type="time" id="stTime" required></div>' +
         '</div>' +
         '<div class="form-row">' +
-        '<div class="form-group"><label>ظرفیت</label><input type="number" id="stCapacity" placeholder="100" value="100"></div>' +
-        '<div class="form-group"><label>قیمت (تومان)</label><input type="number" id="stPrice" placeholder="150000"></div>' +
+            '<div class="form-group"><label>ظرفیت</label><input type="number" id="stCapacity" placeholder="100" value="100"></div>' +
+            '<div class="form-group"><label>قیمت (تومان)</label><input type="number" id="stPrice" placeholder="150000"></div>' +
         '</div>' +
         '<button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> افزودن</button>' +
         '</form></div>';
-
-    // لیست
+    
     html += '<div class="table-wrap"><table><thead><tr>' +
         '<th>فیلم</th><th>تاریخ</th><th>ساعت</th><th>سالن</th><th>ظرفیت</th><th>عملیات</th>' +
         '</tr></thead><tbody>';
-
-    showtimes.forEach(function (s) {
-        var m = movies.find(function (x) { return x.id === s.movie_id; });
+    
+    showtimes.forEach(function(s) {
+        var m = movies.find(function(x) { return x.id === s.movie_id; });
         html += '<tr>' +
             '<td>' + (m ? m.name : '-') + '</td>' +
             '<td>' + toPersian(s.show_date) + '</td>' +
@@ -644,14 +665,14 @@ async function renderShowtimesAdmin(container) {
             '<td>' + (s.hall || '-') + '</td>' +
             '<td>' + s.capacity + '</td>' +
             '<td><button class="btn btn-danger btn-xs" onclick="deleteShowtimeAdmin(\'' + s.id + '\')">' +
-            '<i class="fas fa-trash"></i></button></td>' +
-            '</tr>';
+                '<i class="fas fa-trash"></i></button></td>' +
+        '</tr>';
     });
     html += '</tbody></table></div>';
-
+    
     container.innerHTML = html;
-
-    document.getElementById('addShowtimeForm').addEventListener('submit', async function (e) {
+    
+    document.getElementById('addShowtimeForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         try {
             await insertShowtime({
@@ -664,37 +685,37 @@ async function renderShowtimesAdmin(container) {
             });
             toast('✅ سانس اضافه شد!', 'success');
             loadAdmin('showtimes');
-        } catch (e) { toast('❌ ' + e.message, 'error'); }
+        } catch(e) { toast('❌ ' + e.message, 'error'); }
     });
 }
 
-window.deleteShowtimeAdmin = async function (id) {
+window.deleteShowtimeAdmin = async function(id) {
     if (!confirm('حذف این سانس؟')) return;
     try {
         await deleteShowtime(id);
         toast('✅ حذف شد', 'success');
         loadAdmin('showtimes');
-    } catch (e) { toast('❌ ' + e.message, 'error'); }
+    } catch(e) { toast('❌ ' + e.message, 'error'); }
 };
 
 // ============================================
 // 8. PDF REPORT
 // ============================================
-window.exportReportPDF = async function () {
+window.exportReportPDF = async function() {
     var users = await getUsers();
     var movies = await getMovies();
     var bookings = await getBookings();
     var attendances = await getAttendances();
-
+    
     var revenue = 0;
-    bookings.forEach(function (b) { if (b.payment_status === 'paid') revenue += b.total_price || 0; });
-
+    bookings.forEach(function(b) { if (b.payment_status === 'paid') revenue += b.total_price || 0; });
+    
     var reportHTML = '<div style="font-family:Tahoma,sans-serif;padding:30px;direction:rtl;background:white;color:#000;">';
     reportHTML += '<div style="text-align:center;border-bottom:3px solid #ffd700;padding-bottom:20px;margin-bottom:30px;">';
     reportHTML += '<h1 style="color:#1a4a8a;margin:0;">🎬 گزارش سینما</h1>';
     reportHTML += '<p style="color:#666;margin:10px 0;">تاریخ: ' + toPersian(new Date()) + '</p>';
     reportHTML += '</div>';
-
+    
     reportHTML += '<h2 style="color:#1a4a8a;">📊 آمار کلی</h2>';
     reportHTML += '<table style="width:100%;border-collapse:collapse;margin-bottom:30px;">';
     reportHTML += '<tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;">کاربران</td><td style="padding:10px;border:1px solid #ddd;">' + users.length + '</td></tr>';
@@ -703,12 +724,12 @@ window.exportReportPDF = async function () {
     reportHTML += '<tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;">درآمد کل</td><td style="padding:10px;border:1px solid #ddd;color:#00b09b;font-weight:700;">' + formatCurrency(revenue) + ' تومان</td></tr>';
     reportHTML += '<tr><td style="padding:10px;border:1px solid #ddd;background:#f9f9f9;">حضور</td><td style="padding:10px;border:1px solid #ddd;">' + attendances.length + '</td></tr>';
     reportHTML += '</table>';
-
+    
     reportHTML += '<h2 style="color:#1a4a8a;">🎫 آخرین رزروها</h2>';
     reportHTML += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
     reportHTML += '<thead><tr style="background:#1a4a8a;color:white;"><th style="padding:8px;border:1px solid #ddd;">کد</th><th style="padding:8px;border:1px solid #ddd;">کاربر</th><th style="padding:8px;border:1px solid #ddd;">فیلم</th><th style="padding:8px;border:1px solid #ddd;">قیمت</th><th style="padding:8px;border:1px solid #ddd;">وضعیت</th></tr></thead><tbody>';
-
-    bookings.slice(0, 20).forEach(function (b) {
+    
+    bookings.slice(0, 20).forEach(function(b) {
         var userName = b.users ? (b.users.first_name + ' ' + b.users.last_name) : '-';
         var movieName = b.movies ? b.movies.name : '-';
         reportHTML += '<tr>';
@@ -720,10 +741,10 @@ window.exportReportPDF = async function () {
         reportHTML += '</tr>';
     });
     reportHTML += '</tbody></table>';
-
+    
     reportHTML += '<div style="margin-top:30px;text-align:center;color:#999;font-size:11px;">گزارش تولید شده توسط سیستم سینما</div>';
     reportHTML += '</div>';
-
+    
     var opt = {
         margin: 0.5,
         filename: 'cinema-report-' + new Date().toISOString().split('T')[0] + '.pdf',
@@ -731,7 +752,7 @@ window.exportReportPDF = async function () {
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-
+    
     if (typeof html2pdf !== 'undefined') {
         html2pdf().set(opt).from(reportHTML).save();
         toast('📥 در حال دانلود گزارش PDF...', 'success');
@@ -745,23 +766,22 @@ window.exportReportPDF = async function () {
 // ============================================
 function playNotificationSound() {
     try {
-        // یه صدای ساده با Web Audio API
         var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         var oscillator = audioCtx.createOscillator();
         var gainNode = audioCtx.createGain();
-
+        
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-
+        
         oscillator.frequency.value = 800;
         oscillator.type = 'sine';
-
+        
         gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-
+        
         oscillator.start(audioCtx.currentTime);
         oscillator.stop(audioCtx.currentTime + 0.5);
-    } catch (e) {
+    } catch(e) {
         console.log('صدا پخش نشد:', e);
     }
 }
@@ -772,7 +792,7 @@ function playNotificationSound() {
 function checkNightMode() {
     var hour = new Date().getHours();
     var isNight = hour >= 18 || hour < 6;
-
+    
     if (isNight) {
         document.body.classList.add('night-mode');
         document.body.classList.remove('day-mode');
@@ -782,7 +802,6 @@ function checkNightMode() {
     }
 }
 
-// هر 30 دقیقه چک کن
 setInterval(checkNightMode, 30 * 60 * 1000);
 
 // ============================================
