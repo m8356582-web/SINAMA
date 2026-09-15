@@ -849,4 +849,3 @@ window.loadShowtimes = loadShowtimes;
 window.renderShowtimesAdmin = renderShowtimesAdmin;
 window.playNotificationSound = playNotificationSound;
 window.checkNightMode = checkNightMode;
-
