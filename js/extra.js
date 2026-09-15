@@ -14,102 +14,129 @@ window.openScanner = function() {
     
     openModal('scannerModal');
     
+    var resultDiv = document.getElementById('scanResult');
+    if (resultDiv) resultDiv.innerHTML = '';
+    
+    var qrReaderDiv = document.getElementById('qr-reader');
+    if (qrReaderDiv) qrReaderDiv.innerHTML = '';
+    
+    var scanDone = false;
+    
     setTimeout(function() {
-        if (typeof Html5Qrcode !== 'undefined') {
-            html5QrCode = new Html5Qrcode("qr-reader");
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async function(decodedText) {
-                    console.log('📱 QR اسکن شد:', decodedText);
-                    
-                    var bookingCode = '';
-                    
-                    // حالت 1: JSON
+        if (typeof Html5Qrcode === 'undefined') {
+            if (qrReaderDiv) {
+                qrReaderDiv.innerHTML = '<p style="text-align:center;color:#f87171;padding:20px;">کتابخانه اسکنر لود نشده</p>';
+            }
+            return;
+        }
+        
+        html5QrCode = new Html5Qrcode("qr-reader");
+        
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            async function(decodedText) {
+                if (scanDone) return;
+                scanDone = true;
+                
+                console.log('📱 QR اسکن شد:', decodedText);
+                
+                if (html5QrCode) {
                     try {
-                        var data = JSON.parse(decodedText);
-                        bookingCode = data.code || data.booking_code || '';
-                    } catch(e) {
-                        // حالت 2: متن ساده
-                        bookingCode = decodedText.trim();
-                    }
+                        await html5QrCode.stop();
+                        html5QrCode.clear();
+                    } catch(e) {}
+                    html5QrCode = null;
+                }
+                
+                var bookingCode = '';
+                
+                try {
+                    var data = JSON.parse(decodedText);
+                    bookingCode = data.code || data.booking_code || '';
+                } catch(e) {
+                    bookingCode = decodedText.trim();
+                }
+                
+                console.log('🔍 کد بلیط:', bookingCode);
+                
+                if (!bookingCode) {
+                    resultDiv.innerHTML = 
+                        '<div style="padding:20px;background:rgba(248,113,113,.15);border-radius:16px;border:2px solid #f87171;text-align:center;">' +
+                            '<i class="fas fa-times-circle" style="font-size:48px;color:#f87171;margin-bottom:15px;display:block;"></i>' +
+                            '<h3 style="color:#f87171;">❌ کد خالی</h3>' +
+                        '</div>';
+                    return;
+                }
+                
+                var bookings = await getBookings();
+                var booking = bookings.find(function(b) { return b.booking_code === bookingCode; });
+                
+                if (booking) {
+                    var atts = await getAttendances();
+                    var existing = atts.find(function(x) { return x.booking_id === booking.id; });
                     
-                    console.log('🔍 کد بلیط:', bookingCode);
-                    
-                    var resultDiv = document.getElementById('scanResult');
-                    
-                    if (!bookingCode) {
+                    if (existing) {
                         resultDiv.innerHTML = 
-                            '<div style="padding:20px;background:rgba(248,113,113,.15);border-radius:16px;border:2px solid #f87171;text-align:center;">' +
-                                '<i class="fas fa-times-circle" style="font-size:48px;color:#f87171;margin-bottom:15px;display:block;"></i>' +
-                                '<h3 style="color:#f87171;">❌ کد خالی</h3>' +
+                            '<div style="padding:20px;background:rgba(255,215,0,.15);border-radius:16px;border:2px solid #ffd700;text-align:center;">' +
+                                '<i class="fas fa-exclamation-triangle" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i>' +
+                                '<h3 style="color:#ffd700;margin-bottom:10px;">⚠️ قبلاً ثبت شده</h3>' +
+                                '<p style="font-size:14px;">کد: ' + booking.booking_code + '</p>' +
+                                '<p style="font-size:12px;opacity:0.7;margin-top:5px;">این بلیط قبلاً اسکن شده</p>' +
+                                '<button class="btn btn-primary" onclick="openScanner()" style="margin-top:15px;">' +
+                                    '<i class="fas fa-redo"></i> اسکن مجدد' +
+                                '</button>' +
                             '</div>';
-                        return;
-                    }
-                    
-                    var bookings = await getBookings();
-                    var booking = bookings.find(function(b) { return b.booking_code === bookingCode; });
-                    
-                    if (booking) {
-                        var atts = await getAttendances();
-                        var existing = atts.find(function(x) { return x.booking_id === booking.id; });
-                        
-                        if (existing) {
-                            resultDiv.innerHTML = 
-                                '<div style="padding:20px;background:rgba(255,215,0,.15);border-radius:16px;border:2px solid #ffd700;text-align:center;">' +
-                                    '<i class="fas fa-exclamation-triangle" style="font-size:48px;color:#ffd700;margin-bottom:15px;display:block;"></i>' +
-                                    '<h3 style="color:#ffd700;margin-bottom:10px;">⚠️ قبلاً ثبت شده</h3>' +
-                                    '<p style="font-size:14px;">کد: ' + booking.booking_code + '</p>' +
-                                    '<p style="font-size:12px;opacity:0.7;margin-top:5px;">این بلیط قبلاً اسکن شده</p>' +
-                                '</div>';
-                        } else {
-                            resultDiv.innerHTML = 
-                                '<div style="padding:20px;background:rgba(74,222,128,.15);border-radius:16px;border:2px solid #4ade80;text-align:center;">' +
-                                    '<i class="fas fa-check-circle" style="font-size:48px;color:#4ade80;margin-bottom:15px;display:block;"></i>' +
-                                    '<h3 style="color:#4ade80;margin-bottom:10px;">✅ بلیط معتبر</h3>' +
-                                    '<p style="font-size:14px;margin:5px 0;">کد: ' + booking.booking_code + '</p>' +
-                                    '<p style="font-size:14px;margin:5px 0;">تعداد: ' + booking.ticket_count + ' نفر</p>' +
-                                    '<button class="btn btn-success" onclick="scanCheckIn(\'' + booking.id + '\')" style="margin-top:15px;">' +
-                                        '<i class="fas fa-user-check"></i> ثبت حضور' +
-                                    '</button>' +
-                                '</div>';
-                        }
-                        
-                        if (html5QrCode) {
-                            html5QrCode.stop().catch(function() {});
-                            html5QrCode = null;
-                        }
                     } else {
                         resultDiv.innerHTML = 
-                            '<div style="padding:20px;background:rgba(248,113,113,.15);border-radius:16px;border:2px solid #f87171;text-align:center;">' +
-                                '<i class="fas fa-times-circle" style="font-size:48px;color:#f87171;margin-bottom:15px;display:block;"></i>' +
-                                '<h3 style="color:#f87171;margin-bottom:10px;">❌ بلیط نامعتبر</h3>' +
-                                '<p style="font-size:12px;opacity:0.7;">کد اسکن شده: ' + bookingCode + '</p>' +
+                            '<div style="padding:20px;background:rgba(74,222,128,.15);border-radius:16px;border:2px solid #4ade80;text-align:center;">' +
+                                '<i class="fas fa-check-circle" style="font-size:48px;color:#4ade80;margin-bottom:15px;display:block;"></i>' +
+                                '<h3 style="color:#4ade80;margin-bottom:10px;">✅ بلیط معتبر</h3>' +
+                                '<p style="font-size:14px;margin:5px 0;">کد: ' + booking.booking_code + '</p>' +
+                                '<p style="font-size:14px;margin:5px 0;">تعداد: ' + booking.ticket_count + ' نفر</p>' +
+                                '<button class="btn btn-success" onclick="scanCheckIn(\'' + booking.id + '\')" style="margin-top:15px;">' +
+                                    '<i class="fas fa-user-check"></i> ثبت حضور' +
+                                '</button>' +
+                                '<button class="btn btn-glass" onclick="openScanner()" style="margin-top:10px;">' +
+                                    '<i class="fas fa-redo"></i> اسکن بلیط بعدی' +
+                                '</button>' +
                             '</div>';
                     }
-                },
-                function(errorMessage) {}
-            ).catch(function(err) {
-                var qrReader = document.getElementById('qr-reader');
-                if (qrReader) {
-                    qrReader.innerHTML = 
-                        '<p style="text-align:center;color:#f87171;padding:20px;">خطا در دسترسی به دوربین</p>';
+                } else {
+                    resultDiv.innerHTML = 
+                        '<div style="padding:20px;background:rgba(248,113,113,.15);border-radius:16px;border:2px solid #f87171;text-align:center;">' +
+                            '<i class="fas fa-times-circle" style="font-size:48px;color:#f87171;margin-bottom:15px;display:block;"></i>' +
+                            '<h3 style="color:#f87171;margin-bottom:10px;">❌ بلیط نامعتبر</h3>' +
+                            '<p style="font-size:12px;opacity:0.7;">کد اسکن شده: ' + bookingCode + '</p>' +
+                            '<button class="btn btn-primary" onclick="openScanner()" style="margin-top:15px;">' +
+                                '<i class="fas fa-redo"></i> اسکن مجدد' +
+                            '</button>' +
+                        '</div>';
                 }
-            });
-        } else {
-            var qrReader = document.getElementById('qr-reader');
-            if (qrReader) {
-                qrReader.innerHTML = 
-                    '<p style="text-align:center;color:#f87171;padding:20px;">کتابخانه اسکنر لود نشده</p>';
+            },
+            function(errorMessage) {}
+        ).catch(function(err) {
+            console.error('خطا در دوربین:', err);
+            if (qrReaderDiv) {
+                qrReaderDiv.innerHTML = 
+                    '<p style="text-align:center;color:#f87171;padding:20px;">خطا در دسترسی به دوربین<br><small>' + err.message + '</small></p>';
             }
-        }
-    }, 300);
+        });
+    }, 500);
 };
 
 window.closeScanner = function() {
     if (html5QrCode) {
-        html5QrCode.stop().catch(function() {});
-        html5QrCode = null;
+        try {
+            html5QrCode.stop().then(function() {
+                html5QrCode.clear();
+                html5QrCode = null;
+            }).catch(function() {
+                html5QrCode = null;
+            });
+        } catch(e) {
+            html5QrCode = null;
+        }
     }
     closeModal('scannerModal');
     var resultDiv = document.getElementById('scanResult');
@@ -822,3 +849,4 @@ window.loadShowtimes = loadShowtimes;
 window.renderShowtimesAdmin = renderShowtimesAdmin;
 window.playNotificationSound = playNotificationSound;
 window.checkNightMode = checkNightMode;
+
