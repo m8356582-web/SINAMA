@@ -72,12 +72,10 @@ async function insertBooking(booking) {
     var { data, error } = await supabase.from('bookings').insert(bookingData).select().single();
     if (error) throw error;
     
-    // افزایش تعداد استفاده کد تخفیف
     if (data && currentDiscount && typeof incrementDiscountUse === 'function') {
         await incrementDiscountUse(currentDiscount.id);
     }
     
-    // اعلان به ادمین
     if (data) {
         try {
             var users = await getUsers();
@@ -487,7 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// SHOW TICKET - نسخه اصلاح‌شده با API آنلاین QR
+// SHOW TICKET - با API آنلاین QR
 // ============================================
 window.showTicket = async function(bookingId) {
     try {
@@ -500,10 +498,8 @@ window.showTicket = async function(bookingId) {
         var releaseDate = b.movies ? toPersian(b.movies.release_date) : '-';
         var passengers = b.passengers || [];
         
-        // متن QR - ساده و کوتاه (فقط کد بلیط)
         var qrText = b.booking_code || ('TICKET-' + b.id);
         
-        // ساخت HTML بلیط
         var ticketHTML = 
             '<div style="margin-bottom:20px;">' +
                 '<div style="font-size:20px;font-weight:900;color:#ffd700;margin-bottom:10px;">🎬 سینما</div>' +
@@ -546,33 +542,27 @@ window.showTicket = async function(bookingId) {
         document.getElementById('ticketContent').innerHTML = ticketHTML;
         openModal('ticketModal');
         
-        // ساخت QR Code با API (مطمئن‌ترین روش)
         setTimeout(function() {
             var qrImg = document.getElementById('qr-img');
             var qrLoading = document.getElementById('qr-loading');
             
             if (!qrImg) return;
             
-            // استفاده از API آنلاین
             var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrText) + '&color=0a1628&bgcolor=ffffff&margin=10&qzone=1';
             
             qrImg.onload = function() {
-                console.log('✅ QR Code با موفقیت لود شد');
+                console.log('✅ QR Code لود شد');
                 if (qrLoading) qrLoading.style.display = 'none';
                 qrImg.style.display = 'block';
             };
             
             qrImg.onerror = function() {
-                console.error('❌ خطا در لود QR Code، تلاش با API دوم');
-                // API پشتیبان
+                console.error('❌ خطا در QR، تلاش پشتیبان');
                 var backupUrl = 'https://quickchart.io/qr?text=' + encodeURIComponent(qrText) + '&size=300&dark=0a1628&light=ffffff&ecLevel=H';
                 qrImg.src = backupUrl;
             };
             
-            // اول مخفی کن
             qrImg.style.display = 'none';
-            
-            // لود کن
             qrImg.src = qrUrl;
             
             console.log('📱 QR Text:', qrText);
@@ -584,40 +574,87 @@ window.showTicket = async function(bookingId) {
     }
 };
 
-// ===== PRINT TICKET =====
+// ============================================
+// PRINT TICKET - چاپ مرورگر (کیفیت بالا)
+// ============================================
 window.printTicket = function() {
     var content = document.getElementById('ticketContent').innerHTML;
-    var printWindow = window.open('', '', 'height=700,width=500');
-    printWindow.document.write('<html dir="rtl"><head><title>چاپ بلیط</title>');
-    printWindow.document.write('<style>body{font-family:Tahoma,sans-serif;padding:20px;text-align:center;background:white;color:black;}</style>');
-    printWindow.document.write('</head><body>');
+    
+    var printWindow = window.open('', '', 'height=800,width=600');
+    
+    printWindow.document.write('<!DOCTYPE html>');
+    printWindow.document.write('<html dir="rtl" lang="fa">');
+    printWindow.document.write('<head>');
+    printWindow.document.write('<meta charset="UTF-8">');
+    printWindow.document.write('<title>بلیط سینما</title>');
+    printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">');
+    printWindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">');
+    printWindow.document.write('<style>');
+    printWindow.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+    printWindow.document.write('body { font-family: "Vazirmatn", Tahoma, sans-serif; padding: 30px; background: #0a1628; color: #e8eef7; direction: rtl; }');
+    printWindow.document.write('.ticket { max-width: 420px; margin: 0 auto; background: linear-gradient(135deg, #0a1628, #1a2a4a); border-radius: 20px; padding: 30px; border: 2px dashed rgba(255, 215, 0, .4); text-align: center; }');
+    printWindow.document.write('#qr-img { display: block !important; margin: 0 auto; background: #fff; padding: 10px; border-radius: 10px; width: 220px; height: 220px; }');
+    printWindow.document.write('#qr-loading { display: none !important; }');
+    printWindow.document.write('@media print { body { background: #0a1628 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }');
+    printWindow.document.write('</style>');
+    printWindow.document.write('</head>');
+    printWindow.document.write('<body>');
+    printWindow.document.write('<div class="ticket">');
     printWindow.document.write(content);
-    printWindow.document.write('</body></html>');
+    printWindow.document.write('</div>');
+    printWindow.document.write('</body>');
+    printWindow.document.write('</html>');
     printWindow.document.close();
-    setTimeout(function() { printWindow.print(); }, 800);
+    
+    setTimeout(function() {
+        printWindow.focus();
+        printWindow.print();
+    }, 1500);
+    
+    toast('📄 پنجره چاپ باز شد. Save as PDF رو بزن', 'success');
 };
 
-// ===== DOWNLOAD PDF =====
+// ============================================
+// DOWNLOAD PDF - با چاپ مرورگر (کیفیت بالا)
+// ============================================
 window.downloadTicketPDF = function() {
-    var element = document.getElementById('ticketContent');
-    var opt = {
-        margin: 0.5,
-        filename: 'cinema-ticket-' + Date.now() + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2, 
-            backgroundColor: '#0a1628',
-            useCORS: true,
-            allowTaint: true
-        },
-        jsPDF: { unit: 'in', format: 'a5', orientation: 'portrait' }
-    };
-    if (typeof html2pdf !== 'undefined') {
-        html2pdf().set(opt).from(element).save();
-        toast('📥 در حال دانلود PDF...', 'success');
-    } else {
-        toast('❌ کتابخانه PDF لود نشده', 'error');
-    }
+    var content = document.getElementById('ticketContent').innerHTML;
+    
+    var printWindow = window.open('', '', 'height=800,width=600');
+    
+    printWindow.document.write('<!DOCTYPE html>');
+    printWindow.document.write('<html dir="rtl" lang="fa">');
+    printWindow.document.write('<head>');
+    printWindow.document.write('<meta charset="UTF-8">');
+    printWindow.document.write('<title>بلیط سینما</title>');
+    printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">');
+    printWindow.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">');
+    printWindow.document.write('<style>');
+    printWindow.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+    printWindow.document.write('body { font-family: "Vazirmatn", Tahoma, sans-serif; padding: 30px; background: #0a1628; color: #e8eef7; direction: rtl; }');
+    printWindow.document.write('.ticket { max-width: 420px; margin: 0 auto; background: linear-gradient(135deg, #0a1628, #1a2a4a); border-radius: 20px; padding: 30px; border: 2px dashed rgba(255, 215, 0, .4); text-align: center; }');
+    printWindow.document.write('#qr-img { display: block !important; margin: 0 auto; background: #fff; padding: 10px; border-radius: 10px; width: 220px; height: 220px; }');
+    printWindow.document.write('#qr-loading { display: none !important; }');
+    printWindow.document.write('@media print { body { background: #0a1628 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { margin: 0; size: A5 portrait; } }');
+    printWindow.document.write('</style>');
+    printWindow.document.write('</head>');
+    printWindow.document.write('<body>');
+    printWindow.document.write('<div class="ticket">');
+    printWindow.document.write(content);
+    printWindow.document.write('</div>');
+    printWindow.document.write('<script>');
+    printWindow.document.write('window.onload = function() {');
+    printWindow.document.write('  setTimeout(function() {');
+    printWindow.document.write('    window.focus();');
+    printWindow.document.write('    window.print();');
+    printWindow.document.write('  }, 800);');
+    printWindow.document.write('};');
+    printWindow.document.write('<\/script>');
+    printWindow.document.write('</body>');
+    printWindow.document.write('</html>');
+    printWindow.document.close();
+    
+    toast('📄 پنجره چاپ باز شد. Save as PDF رو بزن', 'success');
 };
 
 // ===== EXPORT =====
